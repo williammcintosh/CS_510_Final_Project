@@ -1,0 +1,57 @@
+POST http://localhost:3000/question
+Content-Type: application/json
+
+{
+  "title": "a title",
+  "content": "Some content",
+  "tags": ["tag1", "tag2"]
+}
+
+###
+GET http://localhost:3000/questions
+Accept: application/json
+
+###
+GET http://localhost:3000/question/1
+Accept: application/json
+
+###
+GET http://localhost:3000/blargh
+Accept: application/json
+
+###
+DELETE http://localhost:3000/question?question_id=1
+Content-Type: application/json
+
+{
+  "title": "a title",
+  "content": "Some content",
+  "tags": ["tag1", "tag2"]
+}
+
+
+###
+POST http://localhost:3000/users
+Content-Type: application/json
+
+{
+  "email": "newemail12@email.com",
+  "password": "password",
+  "confirm_password": "password"
+}
+
+###
+POST http://localhost:3000/login
+Content-Type: application/json
+
+{
+  "email": "newemail12@email.com",
+  "password": "password"
+}
+
+###
+GET http://localhost:3000/protected
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MCwiZW1haWwiOiJuZXdlbWFpbDEyQGVtYWlsLmNvbSIsImV4cCI6MTY5MTAzOTU3NX0.fR7E3QXHfBGBe0iaW-p8hxKZIl6dcXkOcZrVfORxttQ
+
