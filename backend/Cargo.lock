@@ -187,6 +187,7 @@ dependencies = [
  "backtrace",
  "bcrypt",
  "chrono",
+ "cookie",
  "derive_more",
  "dotenvy",
  "futures",
@@ -199,6 +200,7 @@ dependencies = [
  "lazy_static",
  "mime",
  "once_cell",
+ "paste",
  "r2d2",
  "rand",
  "regex",
@@ -421,6 +423,16 @@ name = "convert_case"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6245d59a3e82a7fc217c5828a6692dbc6dfb63a0c8c90495621f7b9d79704a0e"
+
+[[package]]
+name = "cookie"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7efb37c3e1ccb1ff97164ad95ac1606e8ccd35b3fa0a7d99a304c7f4a428cc24"
+dependencies = [
+ "time 0.3.22",
+ "version_check",
+]
 
 [[package]]
 name = "core-foundation"
@@ -1493,9 +1505,9 @@ dependencies = [
 
 [[package]]
 name = "paste"
-version = "1.0.13"
+version = "1.0.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4b27ab7be369122c218afc2079489cdcb4b517c0a3fc386ff11e1fedfcc2b35"
+checksum = "de3145af08024dea9fa9914f381a17b8fc6034dfb00f3a84013f7ff43f29ed4c"
 
 [[package]]
 name = "pem"

@@ -17,6 +17,9 @@ use crate::models::answer::{Answer, CreateAnswer};
 use crate::models::question::{
     CreateQuestion, GetQuestionById, Question, QuestionId, UpdateQuestion,
 };
+use crate::models::apod::{
+    CreateApod, GetApodById, Apod, ApodId, UpdateApod,
+};
 use crate::models::user::{Claims, OptionalClaims, User, UserSignup, KEYS};
 
 use crate::template::TEMPLATES;

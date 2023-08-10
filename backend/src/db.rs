@@ -13,6 +13,9 @@ use crate::models::page::{AnswerWithComments, PagePackage, QuestionWithComments}
 use crate::models::question::{
     GetQuestionById, IntoQuestionId, Question, QuestionId, UpdateQuestion,
 };
+use crate::models::apod::{
+    GetApodById, IntoApodId, Apod, ApodId, UpdateApod,
+};
 use crate::models::user::{User, UserSignup};
 
 #[derive(Clone)]
@@ -106,7 +109,7 @@ SELECT * FROM questions
         &mut self,
         id: T,
     ) -> Result<Question, AppError> {
-        let id = id.into_id();
+        let id = id.into_question_id();
 
         let row = sqlx::query!(
             r#"
@@ -193,7 +196,7 @@ SELECT title, content, id, tags FROM questions WHERE id = $1
     }
 
     pub async fn delete_question(&mut self, question_id: i32) -> Result<(), AppError> {
-        let question_id = question_id.into_id();
+        let question_id = question_id.into_question_id();
         println!("DELETE - Question id is {}", &question_id);
         sqlx::query!(
             r#"
