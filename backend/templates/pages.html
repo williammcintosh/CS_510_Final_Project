@@ -3,42 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Heap Overrun - Questions</title>
+    <title>Astronomical Pictures of the Day</title>
 </head>
 <body>
-<h1>Questions and Answers</h1>
+<h1>APODS</h1>
 
 {% for package in page_packages %}
 <div class="package">
-    <h2>Question: {{ package.question.question.title }}</h2>
-    <p>Content: {{ package.question.question.content }}</p>
+    <h2>APOD: {{ package.apod.apod.title }}</h2>
+    <p>Explanation: {{ package.apod.apod.explanation }}</p>
+    <p>Url: {{ package.apod.apod.url }}</p>
+    <p>Date: {{ package.apod.apod.img_date }}</p>
 
-    {% if package.question.question.tags %}
-    <ul>
-        Tags:
-        {% for tag in package.question.question.tags %}
-        <li>{{ tag }}</li>
-        {% endfor %}
-    </ul>
+<!--    {% if package.question.question.tags %}-->
+<!--    <ul>-->
+<!--        Tags:-->
+<!--        {% for tag in package.question.question.tags %}-->
+<!--        <li>{{ tag }}</li>-->
+<!--        {% endfor %}-->
+<!--    </ul>-->
 
-    {% endif %}
+<!--    {% endif %}-->
 
-    <h3>Comments for question:</h3>
-    {% for comment in package.question.comments %}
+    <h3>Comments for Apod:</h3>
+    {% for comment in package.apod.comments %}
     <p>
         Comment Content: {{comment.content}}
     </p>
     {% endfor %}
 
-    <h3>Answers</h3>
-    {% for answer in package.answers %}
-    <div class="answer">
-        <p>Answer Content: {{answer.answer.content}}</p>
-        <h4>Comments for this answer:</h4>
-        {% for comment in answer.comments %}
-        <p>Comment Content: {{comment.content}}</p>
-        {% endfor %}
-    </div>
+<!--    <h3>Apods</h3>-->
+<!--    {% for apod in package.apods %}-->
+<!--    <div class="apod">-->
+<!--        <p>Apod Content: {{answer.answer.content}}</p>-->
+<!--        <h4>Comments for this answer:</h4>-->
+<!--        {% for comment in answer.comments %}-->
+<!--        <p>Comment Content: {{comment.content}}</p>-->
+<!--        {% endfor %}-->
+<!--    </div>-->
 
     {% endfor %}
 

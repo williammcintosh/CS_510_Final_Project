@@ -37,7 +37,8 @@ pub async fn root(
         context.insert("claims", &claims_data);
         context.insert("is_logged_in", &true);
         // Get all the page data
-        let page_packages = am_database.get_all_question_pages().await?;
+        // let page_packages = am_database.get_all_question_pages().await?;
+        let page_packages = am_database.get_all_apod_pages().await?;
         context.insert("page_packages", &page_packages);
 
         "pages.html" // Use the new template when logged in

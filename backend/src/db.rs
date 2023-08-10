@@ -9,7 +9,12 @@ use tracing::info;
 use crate::error::AppError;
 use crate::models::answer::{Answer, AnswerId};
 use crate::models::comment::{Comment, CommentId, CommentReference};
-use crate::models::page::{AnswerWithComments, PagePackage, QuestionWithComments};
+use crate::models::page::{
+    // AnswerWithComments,
+    PagePackage,
+    // QuestionWithComments,
+    ApodWithComments
+};
 use crate::models::question::{
     GetQuestionById, IntoQuestionId, Question, QuestionId, UpdateQuestion,
 };
@@ -243,9 +248,13 @@ SELECT title, content, id, tags FROM questions WHERE id = $1
     }
 
     pub async fn create_comment(&self, comment: Comment) -> Result<Comment, AppError> {
-        let (question_id, answer_id) = match &comment.reference {
-            CommentReference::Question(qid) => (Some(qid.0), None),
-            CommentReference::Answer(aid) => (None, Some(aid.0)),
+        // let (question_id, answer_id) = match &comment.reference {
+        //     CommentReference::Question(qid) => (Some(qid.0), None),
+        //     CommentReference::Answer(aid) => (None, Some(aid.0)),
+        // };
+
+        let (apod_id) = match &comment.reference {
+            CommentReference::Apod(aid) => (Some(aid.0)),
         };
 
         let res = sqlx::query(
@@ -256,8 +265,8 @@ SELECT title, content, id, tags FROM questions WHERE id = $1
             "#,
         )
             .bind(comment.content)
-            .bind(question_id)
-            .bind(answer_id)
+            // .bind(question_id)
+            .bind(apod_id)
             .fetch_one(&self.conn_pool)
             .await?;
 
@@ -270,70 +279,192 @@ SELECT title, content, id, tags FROM questions WHERE id = $1
         Ok(comment)
     }
 
-    pub async fn get_all_question_pages(&self) -> Result<Vec<PagePackage>, AppError> {
-        let questions = sqlx::query("SELECT id from questions")
+    // pub async fn get_all_question_pages(&self) -> Result<Vec<PagePackage>, AppError> {
+    //     let questions = sqlx::query("SELECT id from questions")
+    //         .fetch_all(&self.conn_pool)
+    //         .await?;
+    //
+    //     let mut res = Vec::new();
+    //
+    //     for row in questions {
+    //         let id = GetQuestionById {
+    //             question_id: row.get("id"),
+    //         };
+    //
+    //         let page = self.get_page_for_question(id).await?;
+    //         res.push(page)
+    //     }
+    //
+    //     Ok(res)
+    // }
+
+    // pub async fn get_page_for_question(
+    //     &self,
+    //     question: GetQuestionById,
+    // ) -> Result<PagePackage, AppError> {
+    //     let question_row = sqlx::query("SELECT * FROM questions WHERE id = $1")
+    //         .bind(question.question_id)
+    //         .fetch_one(&self.conn_pool)
+    //         .await?;
+    //
+    //     let answer_rows = sqlx::query("SELECT * FROM answers WHERE question_id = $1")
+    //         .bind(question.question_id)
+    //         .fetch_all(&self.conn_pool)
+    //         .await?;
+    //
+    //     let comments_rows = sqlx::query("SELECT * FROM comments WHERE question_id = $1 OR answer_id IN (SELECT id FROM answers WHERE question_id = $1)")
+    //         .bind(question.question_id)
+    //         .fetch_all(&self.conn_pool)
+    //         .await?;
+    //
+    //     let question = Question {
+    //         id: QuestionId(question_row.get("id")),
+    //         title: question_row.get("title"),
+    //         content: question_row.get("content"),
+    //         tags: question_row.get("tags"),
+    //     };
+    //
+    //     // TODO: Remove the below code duplication by abstracting into fn
+    //     let mut answers_with_comments = Vec::new();
+    //
+    //     for row in answer_rows {
+    //         let answer = Answer {
+    //             id: AnswerId(row.get("id")),
+    //             content: row.get("content"),
+    //             question_id: QuestionId(row.get("question_id")),
+    //         };
+    //
+    //         let comments_for_answer: Vec<Comment> = comments_rows
+    //             .iter()
+    //             .filter_map(|row| {
+    //                 if let Ok(answer_id) = row.try_get::<i32, _>("answer_id") {
+    //                     if answer_id == answer.id.0 {
+    //                         Some(Comment {
+    //                             id: Some(CommentId(row.get("id"))),
+    //                             content: row.get("content"),
+    //                             reference: CommentReference::Answer(AnswerId(answer_id)),
+    //                         })
+    //                     } else {
+    //                         None
+    //                     }
+    //                 } else {
+    //                     None
+    //                 }
+    //             })
+    //             .collect();
+    //
+    //         answers_with_comments.push(AnswerWithComments {
+    //             answer,
+    //             comments: comments_for_answer,
+    //         });
+    //     }
+    //
+    //     let comments_for_question: Vec<Comment> = comments_rows
+    //         .iter()
+    //         .filter_map(|row| {
+    //             if let Ok(question_id) = row.try_get::<i32, _>("question_id") {
+    //                 if question_id == question.id.0 {
+    //                     Some(Comment {
+    //                         id: Some(CommentId(row.get("id"))),
+    //                         content: row.get("content"),
+    //                         reference: CommentReference::Question(QuestionId(question_id)),
+    //                     })
+    //                 } else {
+    //                     None
+    //                 }
+    //             } else {
+    //                 None
+    //             }
+    //         })
+    //         .collect();
+    //
+    //     let question_with_comments = QuestionWithComments {
+    //         question,
+    //         comments: comments_for_question,
+    //     };
+    //
+    //     let apods_with_comments = ApodsWithComments {
+    //         apod,
+    //         comments: comments_for_apod,
+    //     };
+    //
+    //     let package = PagePackage {
+    //         question: question_with_comments,
+    //         answers: answers_with_comments,
+    //         apod: apods_with_comments,
+    //     };
+    //
+    //     Ok(package)
+    // }
+
+    pub async fn get_all_apod_pages(&self) -> Result<Vec<PagePackage>, AppError> {
+        let apods = sqlx::query("SELECT id from apods")
             .fetch_all(&self.conn_pool)
             .await?;
 
         let mut res = Vec::new();
 
-        for row in questions {
-            let id = GetQuestionById {
-                question_id: row.get("id"),
+        for row in apods {
+            let id = GetApodById {
+                apod_id: row.get("id"),
             };
 
-            let page = self.get_page_for_question(id).await?;
+            let page = self.get_page_for_apod(id).await?;
             res.push(page)
         }
 
         Ok(res)
     }
 
-    pub async fn get_page_for_question(
+    pub async fn get_page_for_apod(
         &self,
-        question: GetQuestionById,
+        apod: GetApodById,
     ) -> Result<PagePackage, AppError> {
-        let question_row = sqlx::query("SELECT * FROM questions WHERE id = $1")
-            .bind(question.question_id)
+
+        let apod_row = sqlx::query("SELECT * FROM apods WHERE id = $1")
+            .bind(apod.apod_id)
             .fetch_one(&self.conn_pool)
             .await?;
 
-        let answer_rows = sqlx::query("SELECT * FROM answers WHERE question_id = $1")
-            .bind(question.question_id)
+        // let answer_rows = sqlx::query("SELECT * FROM answers WHERE question_id = $1")
+        //     .bind(question.question_id)
+        //     .fetch_all(&self.conn_pool)
+        //     .await?;
+
+        let comments_rows = sqlx::query("SELECT * FROM comments WHERE apod_id = $1")
+            .bind(apod.apod_id)
             .fetch_all(&self.conn_pool)
             .await?;
 
-        let comments_rows = sqlx::query("SELECT * FROM comments WHERE question_id = $1 OR answer_id IN (SELECT id FROM answers WHERE question_id = $1)")
-            .bind(question.question_id)
-            .fetch_all(&self.conn_pool)
-            .await?;
-
-        let question = Question {
-            id: QuestionId(question_row.get("id")),
-            title: question_row.get("title"),
-            content: question_row.get("content"),
-            tags: question_row.get("tags"),
+        let apod = Apod {
+            id: ApodId(apod_row.get("id")),
+            title: apod_row.get("title"),
+            explanation: apod_row.get("explanation"),
+            img_date: apod_row.get("img_date"),
+            url: apod_row.get("url"),
         };
 
         // TODO: Remove the below code duplication by abstracting into fn
-        let mut answers_with_comments = Vec::new();
+        let mut apods_with_comments = Vec::new();
 
-        for row in answer_rows {
-            let answer = Answer {
-                id: AnswerId(row.get("id")),
-                content: row.get("content"),
-                question_id: QuestionId(row.get("question_id")),
-            };
+        // for row in apod_row {
+            // let apod = Apod {
+            //     id: ApodId(apod_row.get("id")),
+            //     title: apod_row.get("title"),
+            //     explanation: apod_row.get("explanation"),
+            //     img_date: apod_row.get("img_date"),
+            //     url: apod_row.get("url"),
+            // };
 
-            let comments_for_answer: Vec<Comment> = comments_rows
+            let comments_for_apod: Vec<Comment> = comments_rows
                 .iter()
                 .filter_map(|row| {
-                    if let Ok(answer_id) = row.try_get::<i32, _>("answer_id") {
-                        if answer_id == answer.id.0 {
+                    if let Ok(apod_id) = row.try_get::<i32, _>("apod_id") {
+                        if apod_id == apod.id.0 {
                             Some(Comment {
                                 id: Some(CommentId(row.get("id"))),
                                 content: row.get("content"),
-                                reference: CommentReference::Answer(AnswerId(answer_id)),
+                                reference: CommentReference::Apod(ApodId(apod_id)),
                             })
                         } else {
                             None
@@ -344,39 +475,45 @@ SELECT title, content, id, tags FROM questions WHERE id = $1
                 })
                 .collect();
 
-            answers_with_comments.push(AnswerWithComments {
-                answer,
-                comments: comments_for_answer,
+            apods_with_comments.push(ApodWithComments {
+                apod,
+                comments: comments_for_apod,
             });
-        }
+        // }
 
-        let comments_for_question: Vec<Comment> = comments_rows
-            .iter()
-            .filter_map(|row| {
-                if let Ok(question_id) = row.try_get::<i32, _>("question_id") {
-                    if question_id == question.id.0 {
-                        Some(Comment {
-                            id: Some(CommentId(row.get("id"))),
-                            content: row.get("content"),
-                            reference: CommentReference::Question(QuestionId(question_id)),
-                        })
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
-            })
-            .collect();
+        // let comments_for_question: Vec<Comment> = comments_rows
+        //     .iter()
+        //     .filter_map(|row| {
+        //         if let Ok(question_id) = row.try_get::<i32, _>("question_id") {
+        //             if question_id == question.id.0 {
+        //                 Some(Comment {
+        //                     id: Some(CommentId(row.get("id"))),
+        //                     content: row.get("content"),
+        //                     reference: CommentReference::Question(QuestionId(question_id)),
+        //                 })
+        //             } else {
+        //                 None
+        //             }
+        //         } else {
+        //             None
+        //         }
+        //     })
+        //     .collect();
 
-        let question_with_comments = QuestionWithComments {
-            question,
-            comments: comments_for_question,
-        };
+        // let question_with_comments = QuestionWithComments {
+        //     question,
+        //     comments: comments_for_question,
+        // };
+
+        // let apods_with_comments = ApodWithComments {
+        //     apod,
+        //     comments: comments_for_apod,
+        // };
 
         let package = PagePackage {
-            question: question_with_comments,
-            answers: answers_with_comments,
+            // question: question_with_comments,
+            // answers: answers_with_comments,
+            apod: apods_with_comments,
         };
 
         Ok(package)
