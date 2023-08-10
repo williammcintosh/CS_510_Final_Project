@@ -35,7 +35,7 @@ POST http://localhost:3000/users
 Content-Type: application/json
 
 {
-  "email": "newemail12@email.com",
+  "email": "email12@email.com",
   "password": "password",
   "confirm_password": "password"
 }
@@ -55,3 +55,11 @@ Content-Type: application/json
 Accept: application/json
 Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MCwiZW1haWwiOiJuZXdlbWFpbDEyQGVtYWlsLmNvbSIsImV4cCI6MTY5MTAzOTU3NX0.fR7E3QXHfBGBe0iaW-p8hxKZIl6dcXkOcZrVfORxttQ
 
+###
+GET http://localhost:3000/comments
+Content-Type: application/json
+Accept: application/json
+
+{
+  "question_id": 1
+}

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heap Overrun - Questions</title>
+</head>
+<body>
+<h1>Questions and Answers</h1>
+
+{% for package in page_packages %}
+<div class="package">
+    <h2>Question: {{ package.question.question.title }}</h2>
+    <p>Content: {{ package.question.question.content }}</p>
+
+    {% if package.question.question.tags %}
+    <ul>
+        Tags:
+        {% for tag in package.question.question.tags %}
+        <li>{{ tag }}</li>
+        {% endfor %}
+    </ul>
+
+    {% endif %}
+
+    <h3>Comments for question:</h3>
+    {% for comment in package.question.comments %}
+    <p>
+        Comment Content: {{comment.content}}
+    </p>
+    {% endfor %}
+
+    <h3>Answers</h3>
+    {% for answer in package.answers %}
+    <div class="answer">
+        <p>Answer Content: {{answer.answer.content}}</p>
+        <h4>Comments for this answer:</h4>
+        {% for comment in answer.comments %}
+        <p>Comment Content: {{comment.content}}</p>
+        {% endfor %}
+    </div>
+
+    {% endfor %}
+
+</div>
+
+{% endfor %}
+
+</body>
+</html>

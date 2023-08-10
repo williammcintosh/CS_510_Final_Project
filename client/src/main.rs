@@ -1,29 +1,13 @@
-use reqwest::Client;
+// use reqwest::Client;
+
+mod api_calls;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let client = Client::new();
 
-    let response = client.get("http://localhost:3000/questions")
-        .send()
-        .await?;
+    api_calls::get_all_apods().await?;
 
-    let body = response.text().await?;
-    println!("{}", body);
-
-    let response = client.get("http://localhost:3000/questions")
-        .send()
-        .await?;
-
-    let body = response.text().await?;
-    println!("{}", body);
-
-    let response = client.post("http://localhost:3000/question")
-        .send()
-        .await?;
-
-    let body = response.text().await?;
-    println!("{}", body);
+    // api_calls::get_all_questions("1").await?;
 
     Ok(())
 }

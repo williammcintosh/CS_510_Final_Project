@@ -1,7 +1,10 @@
 use argon2::Config;
 use axum::extract::{Path, Query, State};
-use axum::response::Html;
-use axum::Json;
+use axum::response::{Html, Response};
+use axum::{Form, Json};
+use http::header::{LOCATION, SET_COOKIE};
+use http::{HeaderValue, StatusCode};
+use hyper::Body;
 use jsonwebtoken::Header;
 use serde_json::{json, Value};
 use tera::Context;
@@ -14,21 +17,41 @@ use crate::models::answer::{Answer, CreateAnswer};
 use crate::models::question::{
     CreateQuestion, GetQuestionById, Question, QuestionId, UpdateQuestion,
 };
-use crate::models::user::{Claims, User, UserSignup, KEYS};
+use crate::models::user::{Claims, OptionalClaims, User, UserSignup, KEYS};
 
 use crate::template::TEMPLATES;
 
 #[allow(dead_code)]
-pub async fn root() -> Html<String> {
+pub async fn root(
+    State(mut am_database): State<Store>,
+    OptionalClaims(claims): OptionalClaims,
+) -> Result<Html<String>, AppError> {
     let mut context = Context::new();
     context.insert("name", "Casey");
+
+    let template_name = if let Some(claims_data) = claims {
+        error!("Setting claims and is_logged_in is TRUE now");
+        context.insert("claims", &claims_data);
+        context.insert("is_logged_in", &true);
+        // Get all the page data
+        let page_packages = am_database.get_all_question_pages().await?;
+        context.insert("page_packages", &page_packages);
+
+        "pages.html" // Use the new template when logged in
+    } else {
+        // Handle the case where the user isn't logged in
+        error!("is_logged_in is FALSE now");
+        context.insert("is_logged_in", &false);
+        "index.html" // Use the original template when not logged in
+    };
+
     let rendered = TEMPLATES
-        .render("index.html", &context)
+        .render(template_name, &context)
         .unwrap_or_else(|err| {
             error!("Template rendering error: {}", err);
             panic!()
         });
-    Html(rendered)
+    Ok(Html(rendered))
 }
 
 // CRUD create - read - update - delete
@@ -131,8 +154,8 @@ pub async fn register(
 
 pub async fn login(
     State(mut database): State<Store>,
-    Json(creds): Json<User>,
-) -> Result<Json<Value>, AppError> {
+    Form(creds): Form<User>,
+) -> Result<Response<Body>, AppError> {
     if creds.email.is_empty() || creds.password.is_empty() {
         return Err(AppError::MissingCredentials);
     }
@@ -161,7 +184,23 @@ pub async fn login(
 
     let token = jsonwebtoken::encode(&Header::default(), &claims, &KEYS.encoding)
         .map_err(|_| AppError::MissingCredentials)?;
-    Ok(Json(json!({ "access_token" : token, "type": "Bearer"})))
+
+    let cookie = cookie::Cookie::build("jwt", token).http_only(true).finish();
+
+    let mut response = Response::builder()
+        .status(StatusCode::FOUND)
+        .body(Body::empty())
+        .unwrap();
+
+    response
+        .headers_mut()
+        .insert(LOCATION, HeaderValue::from_static("/"));
+    response.headers_mut().insert(
+        SET_COOKIE,
+        HeaderValue::from_str(&cookie.to_string()).unwrap(),
+    );
+
+    Ok(response)
 }
 
 pub async fn protected(claims: Claims) -> Result<String, AppError> {
@@ -169,4 +208,12 @@ pub async fn protected(claims: Claims) -> Result<String, AppError> {
         "Welcome to the PROTECTED area :) \n Your claim data is: {}",
         claims
     ))
+}
+
+pub async fn get_all_apods(
+    State(mut am_database): State<Store>,
+) -> Result<Json<Vec<Apod>>, AppError> {
+    let all_apods = am_database.get_all_apods().await?;
+
+    Ok(Json(all_apods))
 }
