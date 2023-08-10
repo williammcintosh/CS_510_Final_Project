@@ -17,15 +17,19 @@ pub async fn app(pool: PgPool) -> Router {
     Router::new()
         // The router matches these FROM TOP TO BOTTOM explicitly!
         .route("/", get(root))
+
         .route("/questions", get(handlers::get_questions))
         .route("/question/:question_id", get(handlers::get_question_by_id))
         .route("/question", post(handlers::create_question))
         .route("/question", put(handlers::update_question))
         .route("/question", delete(handlers::delete_question))
         .route("/answer", post(handlers::create_answer))
+
+        .route("/apods", get(handlers::get_all_apods))
         .route("/users", post(handlers::register))
         .route("/login", post(handlers::login))
         .route("/protected", get(handlers::protected))
+
         .route("/*_", get(handle_404))
         .layer(cors_layer)
         .layer(trace_layer)

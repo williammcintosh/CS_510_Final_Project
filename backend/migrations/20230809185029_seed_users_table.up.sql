@@ -1,5 +1,5 @@
 -- Add up migration script here
-INSERT INTO users (email, password, is_admin)
+INSERT INTO users (email, password, is_admin, is_banned)
 VALUES
     ('willymac@legitemail.com', '1234qwer', true, false),
     ('billyjoel@legitemail.com', '1qazxsw2', false, false);

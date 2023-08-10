@@ -9,6 +9,7 @@ use tracing::info;
 use crate::error::AppError;
 use crate::models::answer::{Answer, AnswerId};
 use crate::models::question::{IntoQuestionId, Question, QuestionId, UpdateQuestion};
+use crate::models::apod::{IntoApodId, Apod, ApodId, UpdateApod};
 use crate::models::user::{User, UserSignup};
 
 #[derive(Clone)]
@@ -233,6 +234,27 @@ SELECT title, content, id, tags FROM questions WHERE id = $1
                 serde_json::json!({"message": "User created successfully!"}),
             ))
         }
+    }
+
+    pub async fn get_all_apods(&mut self) -> Result<Vec<Apod>, AppError> {
+        let rows = sqlx::query!(r#"SELECT * FROM apods"#)
+            .fetch_all(&self.conn_pool)
+            .await?;
+
+        let apods: Vec<_> = rows
+            .into_iter()
+            .map(|row| {
+                Apod {
+                    id: row.id.into(), // Assuming you have a From<u32> for ApodId
+                    img_date: row.img_date,
+                    explanation: row.explanation,
+                    title: row.title,
+                    url: row.url,
+                }
+            })
+            .collect();
+
+        Ok(apods)
     }
 }
 

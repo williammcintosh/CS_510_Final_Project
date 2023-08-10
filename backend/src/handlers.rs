@@ -14,6 +14,9 @@ use crate::models::answer::{Answer, CreateAnswer};
 use crate::models::question::{
     CreateQuestion, GetQuestionById, Question, QuestionId, UpdateQuestion,
 };
+use crate::models::apod::{
+    CreateApod, GetApodById, Apod, ApodId, UpdateApod,
+};
 use crate::models::user::{Claims, User, UserSignup, KEYS};
 
 use crate::template::TEMPLATES;
@@ -169,4 +172,13 @@ pub async fn protected(claims: Claims) -> Result<String, AppError> {
         "Welcome to the PROTECTED area :) \n Your claim data is: {}",
         claims
     ))
+}
+
+pub async fn get_all_apods(
+    State(mut am_database): State<Store>,
+) -> Result<Json<Vec<Apod>>, AppError> {
+    println!("HERE!!!");
+    let all_apods = am_database.get_all_apods().await?;
+
+    Ok(Json(all_apods))
 }
