@@ -11,6 +11,7 @@
 {% for package in page_packages %}
 <div class="package">
     <h2>Question: {{ package.question.question.title }}</h2>
+    <p>Image Date: {{ package.question.question.img_date }}</p>
     <p>Content: {{ package.question.question.content }}</p>
     <p>Url: {{ package.question.question.url }}</p>
 

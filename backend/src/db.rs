@@ -96,6 +96,7 @@ SELECT * FROM questions
                 Question {
                     id: row.id.into(), // Assuming you have a From<u32> for QuestionId
                     title: row.title,
+                    img_date: row.img_date,
                     content: row.content,
                     url: row.url,
                     tags: row.tags,
@@ -124,6 +125,7 @@ SELECT * FROM questions
         let question = Question {
             id: row.id.into(), // Assuming you have a From<u32> for QuestionId
             title: row.title,
+            img_date: row.img_date,
             content: row.content,
             url: row.url,
             tags: row.tags,
@@ -135,16 +137,18 @@ SELECT * FROM questions
     pub async fn add_question(
         &mut self,
         title: String,
+        img_date: String,
         content: String,
         url: String,
         tags: Option<Vec<String>>,
     ) -> Result<Question, AppError> {
         let res = sqlx::query!(
-            r#"INSERT INTO "questions"(title, content, url, tags)
-           VALUES ($1, $2, $3, $4)
+            r#"INSERT INTO "questions"(title, img_date, content, url, tags)
+           VALUES ($1, $2, $3, $4, $5)
            RETURNING *
         "#,
             title,
+            img_date,
             content,
             url,
             tags.as_deref()
@@ -155,6 +159,7 @@ SELECT * FROM questions
         let new_question = Question {
             id: QuestionId(res.id),
             title: res.title,
+            img_date: res.img_date,
             content: res.content,
             url: res.url,
             tags: res.tags,
@@ -170,10 +175,11 @@ SELECT * FROM questions
         sqlx::query!(
             r#"
     UPDATE questions
-    SET title = $1, content = $2, url = $3, tags = $4
-    WHERE id = $5
+    SET title = $1, img_date = $2, content = $3, url = $4, tags = $5
+    WHERE id = $6
     "#,
             new_question.title,
+            new_question.img_date,
             new_question.content,
             new_question.url,
             new_question.tags.as_deref(),
@@ -184,7 +190,7 @@ SELECT * FROM questions
 
         let row = sqlx::query!(
             r#"
-SELECT title, content, url, id, tags FROM questions WHERE id = $1
+SELECT title, img_date, content, url, id, tags FROM questions WHERE id = $1
 "#,
             new_question.id.0,
         )
@@ -193,6 +199,7 @@ SELECT title, content, url, id, tags FROM questions WHERE id = $1
 
         let question = Question {
             title: row.title,
+            img_date: row.img_date,
             content: row.content,
             url: row.url,
             id: QuestionId(row.id),
@@ -318,6 +325,7 @@ SELECT title, content, url, id, tags FROM questions WHERE id = $1
         let question = Question {
             id: QuestionId(question_row.get("id")),
             title: question_row.get("title"),
+            img_date: question_row.get("img_date"),
             content: question_row.get("content"),
             url: question_row.get("url"),
             tags: question_row.get("tags"),
