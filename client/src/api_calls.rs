@@ -1,6 +1,7 @@
 use dotenv::dotenv;
 use reqwest::Client;
 use std::env;
+use serde_json::json;
 
 // Gets the api port from the .env file
 fn get_api_port() -> Result<String, env::VarError> {
