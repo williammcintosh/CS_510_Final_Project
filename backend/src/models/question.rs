@@ -5,9 +5,10 @@ use serde_derive::{Deserialize, Serialize};
 // This uses the `derive_more` crate to reduce the Display boilerplate (see below)
 #[derive(Clone, Debug, Display, Serialize, Deserialize, sqlx::FromRow)]
 #[display(
-    fmt = "id: {}, title: {}, content: {}, url: {}, tags: {:?}",
+    fmt = "id: {}, title: {}, img_date: {}, content: {}, url: {}, tags: {:?}",
     id,
     title,
+    img_date,
     content,
     url,
     tags
@@ -15,6 +16,7 @@ use serde_derive::{Deserialize, Serialize};
 pub struct Question {
     pub id: QuestionId,
     pub title: String,
+    pub img_date: String,
     pub content: String,
     pub url: String,
     pub tags: Option<Vec<String>>,
@@ -22,10 +24,11 @@ pub struct Question {
 
 impl Question {
     #[allow(dead_code)]
-    pub fn new(id: QuestionId, title: String, content: String, url: String, tags: Option<Vec<String>>) -> Self {
+    pub fn new(id: QuestionId, title: String, img_date: String, content: String, url: String, tags: Option<Vec<String>>) -> Self {
         Question {
             id,
             title,
+            img_date,
             content,
             url,
             tags,
@@ -80,6 +83,7 @@ impl IntoQuestionId for QuestionId {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateQuestion {
     pub title: String,
+    pub img_date: String,
     pub content: String,
     pub url: String,
     pub tags: Option<Vec<String>>,
@@ -94,6 +98,7 @@ pub struct GetQuestionById {
 pub struct UpdateQuestion {
     pub id: QuestionId,
     pub title: String,
+    pub img_date: String,
     pub content: String,
     pub url: String,
     pub tags: Option<Vec<String>>,
