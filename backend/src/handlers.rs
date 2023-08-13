@@ -79,7 +79,7 @@ pub async fn create_question(
     Json(question): Json<CreateQuestion>,
 ) -> Result<Json<Question>, AppError> {
     let question = am_database
-        .add_question(question.title, question.content, question.tags)
+        .add_question(question.title, question.content, question.url, question.tags)
         .await?;
 
     Ok(Json(question))

@@ -97,6 +97,7 @@ SELECT * FROM questions
                     id: row.id.into(), // Assuming you have a From<u32> for QuestionId
                     title: row.title,
                     content: row.content,
+                    url: row.url,
                     tags: row.tags,
                 }
             })
@@ -124,6 +125,7 @@ SELECT * FROM questions
             id: row.id.into(), // Assuming you have a From<u32> for QuestionId
             title: row.title,
             content: row.content,
+            url: row.url,
             tags: row.tags,
         };
 
@@ -134,15 +136,17 @@ SELECT * FROM questions
         &mut self,
         title: String,
         content: String,
+        url: String,
         tags: Option<Vec<String>>,
     ) -> Result<Question, AppError> {
         let res = sqlx::query!(
-            r#"INSERT INTO "questions"(title, content, tags)
-           VALUES ($1, $2, $3)
+            r#"INSERT INTO "questions"(title, content, url, tags)
+           VALUES ($1, $2, $3, $4)
            RETURNING *
         "#,
             title,
             content,
+            url,
             tags.as_deref()
         )
             .fetch_one(&self.conn_pool)
@@ -152,6 +156,7 @@ SELECT * FROM questions
             id: QuestionId(res.id),
             title: res.title,
             content: res.content,
+            url: res.url,
             tags: res.tags,
         };
 
@@ -165,11 +170,12 @@ SELECT * FROM questions
         sqlx::query!(
             r#"
     UPDATE questions
-    SET title = $1, content = $2, tags = $3
-    WHERE id = $4
+    SET title = $1, content = $2, url = $3, tags = $4
+    WHERE id = $5
     "#,
             new_question.title,
             new_question.content,
+            new_question.url,
             new_question.tags.as_deref(),
             new_question.id.0,
         )
@@ -178,7 +184,7 @@ SELECT * FROM questions
 
         let row = sqlx::query!(
             r#"
-SELECT title, content, id, tags FROM questions WHERE id = $1
+SELECT title, content, url, id, tags FROM questions WHERE id = $1
 "#,
             new_question.id.0,
         )
@@ -188,6 +194,7 @@ SELECT title, content, id, tags FROM questions WHERE id = $1
         let question = Question {
             title: row.title,
             content: row.content,
+            url: row.url,
             id: QuestionId(row.id),
             tags: row.tags,
         };
@@ -312,6 +319,7 @@ SELECT title, content, id, tags FROM questions WHERE id = $1
             id: QuestionId(question_row.get("id")),
             title: question_row.get("title"),
             content: question_row.get("content"),
+            url: question_row.get("url"),
             tags: question_row.get("tags"),
         };
 
