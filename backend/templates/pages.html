@@ -6,7 +6,7 @@
     <title>Heap Overrun - Questions</title>
 </head>
 <body>
-<h1>Questions and Answers</h1>
+<h1>Questions</h1>
 
 {% for package in page_packages %}
 <div class="package">
@@ -20,18 +20,6 @@
     <p>
         Comment Content: {{comment.content}}
     </p>
-    {% endfor %}
-
-    <h3>Answers</h3>
-    {% for answer in package.answers %}
-    <div class="answer">
-        <p>Answer Content: {{answer.answer.content}}</p>
-        <h4>Comments for this answer:</h4>
-        {% for comment in answer.comments %}
-        <p>Comment Content: {{comment.content}}</p>
-        {% endfor %}
-    </div>
-
     {% endfor %}
 
 </div>

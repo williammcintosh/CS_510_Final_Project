@@ -3,7 +3,7 @@ use hyper::Body;
 use sqlx::PgPool;
 use tower::ServiceExt;
 
-use backend::answer::CreateAnswer;
+
 use backend::main_routes::app;
 use backend::question::{CreateQuestion, Question};
 
@@ -123,29 +123,5 @@ async fn test_delete_question(db_pool: PgPool) {
 
     dbg!("DELETED QUESTION RESPONSE");
     dbg!(&response);
-    assert_eq!(response.status(), StatusCode::OK);
-}
-
-#[sqlx::test(fixtures("0001_questions", "0002_answers"))]
-async fn test_create_answer(db_pool: PgPool) {
-    let app = app(db_pool).await;
-
-    let answer = CreateAnswer {
-        content: "New Answer".into(),
-        question_id: 1i32,
-    };
-
-    let response = app
-        .oneshot(
-            Request::builder()
-                .method(http::Method::POST)
-                .uri("/answer")
-                .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
-                .body(Body::from(serde_json::to_string(&answer).unwrap()))
-                .unwrap(),
-        )
-        .await
-        .unwrap();
-
     assert_eq!(response.status(), StatusCode::OK);
 }

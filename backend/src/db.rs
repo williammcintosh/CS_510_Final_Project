@@ -7,9 +7,8 @@ use sqlx::{PgPool, Row};
 use tracing::info;
 
 use crate::error::AppError;
-use crate::models::answer::{Answer, AnswerId};
 use crate::models::comment::{Comment, CommentId, CommentReference};
-use crate::models::page::{AnswerWithComments, PagePackage, QuestionWithComments};
+use crate::models::page::{PagePackage, QuestionWithComments};
 use crate::models::question::{
     GetQuestionById, IntoQuestionId, Question, QuestionId, UpdateQuestion,
 };
@@ -22,7 +21,6 @@ use crate::models::user::{User, UserSignup};
 pub struct Store {
     pub conn_pool: PgPool,
     pub questions: Arc<Mutex<Vec<Question>>>,
-    pub answers: Arc<RwLock<Vec<Answer>>>,
 }
 
 pub async fn new_pool() -> PgPool {
@@ -39,7 +37,6 @@ impl Store {
         Self {
             conn_pool: pool,
             questions: Default::default(),
-            answers: Default::default(),
         }
     }
 
@@ -53,32 +50,6 @@ impl Store {
 
         assert_eq!(row.0, 150);
         Ok(())
-    }
-
-    pub async fn add_answer(
-        &mut self,
-        content: String,
-        question_id: i32,
-    ) -> Result<Answer, AppError> {
-        let res = sqlx::query!(
-            r#"
-    INSERT INTO answers (content, question_id)
-    VALUES ($1, $2)
-    RETURNING *
-    "#,
-            content,
-            question_id,
-        )
-            .fetch_one(&self.conn_pool)
-            .await?;
-
-        let answer = Answer {
-            id: AnswerId(res.id),
-            content: res.content,
-            question_id: QuestionId(res.question_id.unwrap()),
-        };
-
-        Ok(answer)
     }
 
     pub async fn get_all_questions(&mut self) -> Result<Vec<Question>, AppError> {
@@ -250,21 +221,19 @@ SELECT title, img_date, content, url, id FROM questions WHERE id = $1
     }
 
     pub async fn create_comment(&self, comment: Comment) -> Result<Comment, AppError> {
-        let (question_id, answer_id) = match &comment.reference {
-            CommentReference::Question(qid) => (Some(qid.0), None),
-            CommentReference::Answer(aid) => (None, Some(aid.0)),
-        };
+        let question_id = match &comment.reference {
+            CommentReference::Question(qid) => Some(qid.0)
+        }.unwrap_or_default();
 
         let res = sqlx::query(
             r#"
-            INSERT INTO comments (content, question_id, answer_id)
-            VALUES ($1, $2, $3)
+            INSERT INTO comments (content, question_id)
+            VALUES ($1, $2)
             RETURNING *
             "#,
         )
             .bind(comment.content)
             .bind(question_id)
-            .bind(answer_id)
             .fetch_one(&self.conn_pool)
             .await?;
 
@@ -305,12 +274,7 @@ SELECT title, img_date, content, url, id FROM questions WHERE id = $1
             .fetch_one(&self.conn_pool)
             .await?;
 
-        let answer_rows = sqlx::query("SELECT * FROM answers WHERE question_id = $1")
-            .bind(question.question_id)
-            .fetch_all(&self.conn_pool)
-            .await?;
-
-        let comments_rows = sqlx::query("SELECT * FROM comments WHERE question_id = $1 OR answer_id IN (SELECT id FROM answers WHERE question_id = $1)")
+        let comments_rows = sqlx::query("SELECT * FROM comments WHERE question_id = $1")
             .bind(question.question_id)
             .fetch_all(&self.conn_pool)
             .await?;
@@ -322,41 +286,6 @@ SELECT title, img_date, content, url, id FROM questions WHERE id = $1
             content: question_row.get("content"),
             url: question_row.get("url"),
         };
-
-        // TODO: Remove the below code duplication by abstracting into fn
-        let mut answers_with_comments = Vec::new();
-
-        for row in answer_rows {
-            let answer = Answer {
-                id: AnswerId(row.get("id")),
-                content: row.get("content"),
-                question_id: QuestionId(row.get("question_id")),
-            };
-
-            let comments_for_answer: Vec<Comment> = comments_rows
-                .iter()
-                .filter_map(|row| {
-                    if let Ok(answer_id) = row.try_get::<i32, _>("answer_id") {
-                        if answer_id == answer.id.0 {
-                            Some(Comment {
-                                id: Some(CommentId(row.get("id"))),
-                                content: row.get("content"),
-                                reference: CommentReference::Answer(AnswerId(answer_id)),
-                            })
-                        } else {
-                            None
-                        }
-                    } else {
-                        None
-                    }
-                })
-                .collect();
-
-            answers_with_comments.push(AnswerWithComments {
-                answer,
-                comments: comments_for_answer,
-            });
-        }
 
         let comments_for_question: Vec<Comment> = comments_rows
             .iter()
@@ -384,7 +313,6 @@ SELECT title, img_date, content, url, id FROM questions WHERE id = $1
 
         let package = PagePackage {
             question: question_with_comments,
-            answers: answers_with_comments,
         };
 
         Ok(package)
