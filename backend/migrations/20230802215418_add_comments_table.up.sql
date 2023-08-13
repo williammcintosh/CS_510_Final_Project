@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS comments
     created_on             TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     answer_id              integer REFERENCES answers ON DELETE CASCADE,
     question_id            integer REFERENCES questions ON DELETE CASCADE,
+    apod_id                integer REFERENCES apods ON DELETE CASCADE,
 
     CONSTRAINT only_one_foreign_key CHECK (
         (question_id IS NOT NULL AND answer_id IS NULL)
