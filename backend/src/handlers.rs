@@ -13,7 +13,6 @@ use tracing::error;
 use crate::db::Store;
 use crate::error::AppError;
 use crate::get_timestamp_after_8_hours;
-use crate::models::answer::{Answer, CreateAnswer};
 use crate::models::question::{
     CreateQuestion, GetQuestionById, Question, QuestionId, UpdateQuestion,
 };
@@ -100,16 +99,6 @@ pub async fn delete_question(
     am_database.delete_question(query.question_id).await?;
 
     Ok(())
-}
-
-pub async fn create_answer(
-    State(mut am_database): State<Store>,
-    Json(answer): Json<CreateAnswer>,
-) -> Result<Json<Answer>, AppError> {
-    let new_answer = am_database
-        .add_answer(answer.content, answer.question_id)
-        .await?;
-    Ok(Json(new_answer))
 }
 
 pub async fn register(

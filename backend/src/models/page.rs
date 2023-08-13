@@ -1,4 +1,3 @@
-use crate::models::answer::Answer;
 use crate::models::comment::Comment;
 use crate::models::question::Question;
 use axum::response::{IntoResponse, Response};
@@ -7,8 +6,7 @@ use serde_derive::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PagePackage {
-    pub question: QuestionWithComments,
-    pub answers: Vec<AnswerWithComments>,
+    pub question: QuestionWithComments
 }
 
 impl IntoResponse for PagePackage {
@@ -20,11 +18,5 @@ impl IntoResponse for PagePackage {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct QuestionWithComments {
     pub question: Question,
-    pub comments: Vec<Comment>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct AnswerWithComments {
-    pub answer: Answer,
     pub comments: Vec<Comment>,
 }

@@ -23,7 +23,6 @@ pub async fn app(pool: PgPool) -> Router {
         .route("/question", post(handlers::create_question))
         .route("/question", put(handlers::update_question))
         .route("/question", delete(handlers::delete_question))
-        .route("/answer", post(handlers::create_answer))
 
         .route("/apods", get(handlers::get_all_apods))
         .route("/users", post(handlers::register))
