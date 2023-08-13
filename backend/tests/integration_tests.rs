@@ -14,7 +14,6 @@ async fn test_add_question(db_pool: PgPool) {
     let question = CreateQuestion {
         title: "New Title".into(),
         content: "Test content2".into(),
-        tags: None,
     };
 
     let response = app
@@ -84,7 +83,6 @@ async fn test_update_question(db_pool: PgPool) {
         id: 1.into(),
         title: "Updated Title".into(),
         content: "Updated content".into(),
-        tags: None,
     };
 
     let response = app

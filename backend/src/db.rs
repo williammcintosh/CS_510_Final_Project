@@ -99,7 +99,6 @@ SELECT * FROM questions
                     img_date: row.img_date,
                     content: row.content,
                     url: row.url,
-                    tags: row.tags,
                 }
             })
             .collect();
@@ -128,7 +127,6 @@ SELECT * FROM questions
             img_date: row.img_date,
             content: row.content,
             url: row.url,
-            tags: row.tags,
         };
 
         Ok(question)
@@ -140,18 +138,16 @@ SELECT * FROM questions
         img_date: String,
         content: String,
         url: String,
-        tags: Option<Vec<String>>,
     ) -> Result<Question, AppError> {
         let res = sqlx::query!(
-            r#"INSERT INTO "questions"(title, img_date, content, url, tags)
-           VALUES ($1, $2, $3, $4, $5)
+            r#"INSERT INTO "questions"(title, img_date, content, url)
+           VALUES ($1, $2, $3, $4)
            RETURNING *
         "#,
             title,
             img_date,
             content,
             url,
-            tags.as_deref()
         )
             .fetch_one(&self.conn_pool)
             .await?;
@@ -162,7 +158,6 @@ SELECT * FROM questions
             img_date: res.img_date,
             content: res.content,
             url: res.url,
-            tags: res.tags,
         };
 
         Ok(new_question)
@@ -175,14 +170,13 @@ SELECT * FROM questions
         sqlx::query!(
             r#"
     UPDATE questions
-    SET title = $1, img_date = $2, content = $3, url = $4, tags = $5
-    WHERE id = $6
+    SET title = $1, img_date = $2, content = $3, url = $4
+    WHERE id = $5
     "#,
             new_question.title,
             new_question.img_date,
             new_question.content,
             new_question.url,
-            new_question.tags.as_deref(),
             new_question.id.0,
         )
             .execute(&self.conn_pool)
@@ -190,7 +184,7 @@ SELECT * FROM questions
 
         let row = sqlx::query!(
             r#"
-SELECT title, img_date, content, url, id, tags FROM questions WHERE id = $1
+SELECT title, img_date, content, url, id FROM questions WHERE id = $1
 "#,
             new_question.id.0,
         )
@@ -203,7 +197,6 @@ SELECT title, img_date, content, url, id, tags FROM questions WHERE id = $1
             content: row.content,
             url: row.url,
             id: QuestionId(row.id),
-            tags: row.tags,
         };
 
         Ok(question)
@@ -328,7 +321,6 @@ SELECT title, img_date, content, url, id, tags FROM questions WHERE id = $1
             img_date: question_row.get("img_date"),
             content: question_row.get("content"),
             url: question_row.get("url"),
-            tags: question_row.get("tags"),
         };
 
         // TODO: Remove the below code duplication by abstracting into fn
