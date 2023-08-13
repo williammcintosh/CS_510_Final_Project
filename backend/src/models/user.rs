@@ -1,22 +1,28 @@
 use axum::extract::FromRequestParts;
-use axum::headers::authorization::Bearer;
-use axum::headers::Authorization;
-use axum::{async_trait, RequestPartsExt, TypedHeader};
+// use axum::headers::authorization::Bearer;
+// use axum::headers::Authorization;
+use axum::{
+    async_trait,
+    // RequestPartsExt, TypedHeader
+};
 use cookie::Cookie;
 use http::request::Parts;
 use jsonwebtoken::{decode, DecodingKey, EncodingKey, Validation};
 use once_cell::sync::Lazy;
 use std::convert::Infallible;
+use crate::make_db_id;
 
 use crate::error::AppError;
 use serde_derive::{Deserialize, Serialize};
-use sqlx::decode;
+// use sqlx::decode;
 
 #[derive(Serialize, Deserialize, sqlx::FromRow)]
 pub struct User {
     pub email: String,
     pub password: String,
 }
+
+make_db_id!(UserId);
 
 #[derive(Serialize, Deserialize, sqlx::FromRow)]
 pub struct UserSignup {
@@ -119,3 +125,12 @@ pub static KEYS: Lazy<Keys> = Lazy::new(|| {
 
     Keys::new(secret.as_bytes())
 });
+
+// #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, Hash)]
+// pub struct UserId(pub i32);
+//
+// impl From<i32> for UserId {
+//     fn from(value: i32) -> Self {
+//         Self(value)
+//     }
+// }

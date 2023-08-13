@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Astronomical Pictures of the Day</title>
+    <title>Astronomy Picture of the Day</title>
 </head>
 <body>
 <h1>APODS</h1>
 
-{% for package in page_packages %}
-<div class="package">
-    <h2>APOD: {{ package.apod.apod.title }}</h2>
-    <p>Explanation: {{ package.apod.apod.explanation }}</p>
-    <p>Url: {{ package.apod.apod.url }}</p>
-    <p>Date: {{ package.apod.apod.img_date }}</p>
+<!--{% for package in page_packages %}-->
+<!--<div class="package">-->
+<!--    <h2>APOD: {{ package.apod.apod.title }}</h2>-->
+<!--    <p>Explanation: {{ package.apod.apod.explanation }}</p>-->
+<!--    <p>Url: {{ package.apod.apod.url }}</p>-->
+<!--    <p>Date: {{ package.apod.apod.img_date }}</p>-->
 
 <!--    {% if package.question.question.tags %}-->
 <!--    <ul>-->
@@ -25,12 +25,12 @@
 
 <!--    {% endif %}-->
 
-    <h3>Comments for Apod:</h3>
-    {% for comment in package.apod.comments %}
-    <p>
-        Comment Content: {{comment.content}}
-    </p>
-    {% endfor %}
+<!--    <h3>Comments for Apod:</h3>-->
+<!--    {% for comment in package.apod.comments %}-->
+<!--    <p>-->
+<!--        Comment Content: {{comment.content}}-->
+<!--    </p>-->
+<!--    {% endfor %}-->
 
 <!--    <h3>Apods</h3>-->
 <!--    {% for apod in package.apods %}-->
@@ -42,11 +42,11 @@
 <!--        {% endfor %}-->
 <!--    </div>-->
 
-    {% endfor %}
+<!--    {% endfor %}-->
 
-</div>
+<!--</div>-->
 
-{% endfor %}
+<!--{% endfor %}-->
 
 </body>
 </html>

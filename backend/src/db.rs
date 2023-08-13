@@ -8,7 +8,7 @@ use tracing::info;
 
 use crate::error::AppError;
 use crate::models::answer::{Answer, AnswerId};
-use crate::models::comment::{Comment, CommentId, CommentReference};
+use crate::models::comment::{Comment, CommentId};
 use crate::models::page::{
     // AnswerWithComments,
     PagePackage,
@@ -16,12 +16,20 @@ use crate::models::page::{
     ApodWithComments
 };
 use crate::models::question::{
-    GetQuestionById, IntoQuestionId, Question, QuestionId, UpdateQuestion,
+    // GetQuestionById,
+    IntoQuestionId, Question, QuestionId, UpdateQuestion,
 };
 use crate::models::apod::{
-    GetApodById, IntoApodId, Apod, ApodId, UpdateApod,
+    GetApodById,
+    IntoApodId,
+    Apod, ApodId,
+    // UpdateApod,
 };
-use crate::models::user::{User, UserSignup};
+use crate::models::user::{User, UserId, UserSignup};
+use crate::models::favorite::{
+    Favorite, FavoriteId,
+    // FavoriteReference
+};
 
 #[derive(Clone)]
 pub struct Store {
@@ -67,10 +75,10 @@ impl Store {
     ) -> Result<Answer, AppError> {
         let res = sqlx::query!(
             r#"
-    INSERT INTO answers (content, question_id)
-    VALUES ($1, $2)
-    RETURNING *
-    "#,
+                INSERT INTO answers (content, question_id)
+                VALUES ($1, $2)
+                RETURNING *
+            "#,
             content,
             question_id,
         )
@@ -142,9 +150,10 @@ SELECT * FROM questions
         tags: Option<Vec<String>>,
     ) -> Result<Question, AppError> {
         let res = sqlx::query!(
-            r#"INSERT INTO "questions"(title, content, tags)
-           VALUES ($1, $2, $3)
-           RETURNING *
+        r#"
+            INSERT INTO "questions"(title, content, tags)
+            VALUES ($1, $2, $3)
+            RETURNING *
         "#,
             title,
             content,
@@ -247,37 +256,35 @@ SELECT title, content, id, tags FROM questions WHERE id = $1
         }
     }
 
-    pub async fn create_comment(&self, comment: Comment) -> Result<Comment, AppError> {
-        // let (question_id, answer_id) = match &comment.reference {
-        //     CommentReference::Question(qid) => (Some(qid.0), None),
-        //     CommentReference::Answer(aid) => (None, Some(aid.0)),
-        // };
+    pub async fn get_all_comments_by_apod_id<T: IntoApodId>(
+        &mut self,
+        id: T,
+    ) -> Result<Vec<Comment>, AppError> {
+        let id = id.into_apod_id();
 
-        let (apod_id) = match &comment.reference {
-            CommentReference::Apod(aid) => (Some(aid.0)),
-        };
-
-        let res = sqlx::query(
+        let rows = sqlx::query!(
             r#"
-            INSERT INTO comments (content, question_id, answer_id)
-            VALUES ($1, $2, $3)
-            RETURNING *
+            SELECT * FROM comments WHERE apod_id = $1
             "#,
+            id.0,
         )
-            .bind(comment.content)
-            // .bind(question_id)
-            .bind(apod_id)
-            .fetch_one(&self.conn_pool)
-            .await?;
+        .fetch_all(&self.conn_pool)
+        .await?;
 
-        let comment = Comment {
-            id: Some(CommentId(res.get("id"))),
-            content: res.get("content"),
-            reference: comment.reference,
-        };
+        let comments: Vec<_> = rows
+            .into_iter()
+            .map(|row| {
+                Comment {
+                    id: row.id.into(), // Assuming you have a From<u32> for AnswerId
+                    content: row.content,
+                    apod_id: Some(row.apod_id.expect("it failed").into_apod_id()),
+                }
+            })
+            .collect();
 
-        Ok(comment)
+        Ok(comments)
     }
+
 
     // pub async fn get_all_question_pages(&self) -> Result<Vec<PagePackage>, AppError> {
     //     let questions = sqlx::query("SELECT id from questions")
@@ -462,9 +469,9 @@ SELECT title, content, id, tags FROM questions WHERE id = $1
                     if let Ok(apod_id) = row.try_get::<i32, _>("apod_id") {
                         if apod_id == apod.id.0 {
                             Some(Comment {
-                                id: Some(CommentId(row.get("id"))),
+                                id: CommentId(row.get("id")),
                                 content: row.get("content"),
-                                reference: CommentReference::Apod(ApodId(apod_id)),
+                                apod_id: Some(ApodId(apod_id)),
                             })
                         } else {
                             None
@@ -538,6 +545,58 @@ SELECT title, content, id, tags FROM questions WHERE id = $1
             .collect();
 
         Ok(apods)
+    }
+
+    pub async fn add_comment(
+        &mut self,
+        content: String,
+        apod_id: Option<i32>,
+    ) -> Result<Comment, AppError> {
+        let res = sqlx::query!(
+            r#"
+                INSERT INTO "comments"(content, apod_id)
+                VALUES ($1, $2)
+                RETURNING *
+            "#,
+            content,
+            apod_id,
+        )
+            .fetch_one(&self.conn_pool)
+            .await?;
+
+        let comment = Comment {
+            id: CommentId(res.id),
+            content: res.content,
+            apod_id: res.apod_id.map(ApodId),
+        };
+
+        Ok(comment)
+    }
+
+    pub async fn set_favorite(
+        &mut self,
+        user_id: Option<i32>,
+        apod_id: Option<i32>,
+    ) -> Result<Favorite, AppError> {
+        let res = sqlx::query(
+            r#"
+                INSERT INTO "fav_apods"(user_id, apod_id)
+                VALUES ($1, $2)
+                RETURNING *
+            "#,
+        )
+        .bind(user_id)
+        .bind(apod_id)
+        .fetch_one(&self.conn_pool)
+        .await?;
+
+        let favorite = Favorite {
+            id: Some(FavoriteId(res.get("id"))),
+            user_id: Some(UserId(res.get("user_id"))),
+            apod_id: Some(ApodId(res.get("apod_id"))),
+        };
+
+        Ok(favorite)
     }
 }
 

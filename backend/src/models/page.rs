@@ -1,6 +1,6 @@
-use crate::models::answer::Answer;
+// use crate::models::answer::Answer;
 use crate::models::comment::Comment;
-use crate::models::question::Question;
+// use crate::models::question::Question;
 use crate::models::apod::Apod;
 use axum::response::{IntoResponse, Response};
 use axum::Json;

@@ -6,7 +6,10 @@ use http::header::{LOCATION, SET_COOKIE};
 use http::{HeaderValue, StatusCode};
 use hyper::Body;
 use jsonwebtoken::Header;
-use serde_json::{json, Value};
+use serde_json::{
+    // json,
+    Value
+};
 use tera::Context;
 use tracing::error;
 
@@ -18,15 +21,24 @@ use crate::models::question::{
     CreateQuestion, GetQuestionById, Question, QuestionId, UpdateQuestion,
 };
 use crate::models::apod::{
-    CreateApod, GetApodById, Apod, ApodId, UpdateApod,
+    // CreateApod,
+    // GetApodById,
+    Apod, ApodId,
+    // UpdateApod,
 };
-use crate::models::user::{Claims, OptionalClaims, User, UserSignup, KEYS};
-
+use crate::models::user::{
+    Claims, OptionalClaims,
+    User,
+    // UserId,
+    UserSignup, KEYS
+};
+use crate::models::comment::{Comment, CreateComment};
+use crate::models::favorite::{Favorite, SetFavorite};
 use crate::template::TEMPLATES;
 
 #[allow(dead_code)]
 pub async fn root(
-    State(mut am_database): State<Store>,
+    State(am_database): State<Store>,
     OptionalClaims(claims): OptionalClaims,
 ) -> Result<Html<String>, AppError> {
     let mut context = Context::new();
@@ -103,18 +115,8 @@ pub async fn delete_question(
     Ok(())
 }
 
-pub async fn create_answer(
-    State(mut am_database): State<Store>,
-    Json(answer): Json<CreateAnswer>,
-) -> Result<Json<Answer>, AppError> {
-    let new_answer = am_database
-        .add_answer(answer.content, answer.question_id)
-        .await?;
-    Ok(Json(new_answer))
-}
-
 pub async fn register(
-    State(mut database): State<Store>,
+    State(database): State<Store>,
     Json(mut credentials): Json<UserSignup>,
 ) -> Result<Json<Value>, AppError> {
     // We should also check to validate other things at some point like email address being in right format
@@ -157,7 +159,7 @@ pub async fn register(
 }
 
 pub async fn login(
-    State(mut database): State<Store>,
+    State(database): State<Store>,
     Form(creds): Form<User>,
 ) -> Result<Response<Body>, AppError> {
     if creds.email.is_empty() || creds.password.is_empty() {
@@ -221,3 +223,60 @@ pub async fn get_all_apods(
 
     Ok(Json(all_apods))
 }
+
+pub async fn set_favorite(
+    State(mut am_database): State<Store>,
+    Json(favorite): Json<SetFavorite>,
+) -> Result<Json<Favorite>, AppError> {
+    dbg!("SETTING FAVORITE:");
+    dbg!(&favorite);
+    let new_favorite = am_database
+        .set_favorite(favorite.user_id, favorite.apod_id)
+        .await?;
+    Ok(Json(new_favorite))
+}
+
+pub async fn create_answer(
+    State(mut am_database): State<Store>,
+    Json(answer): Json<CreateAnswer>,
+) -> Result<Json<Answer>, AppError> {
+    let new_answer = am_database
+        .add_answer(answer.content, answer.question_id)
+        .await?;
+    Ok(Json(new_answer))
+}
+
+/// Get all comments for a source id
+/// https://doc.rust-lang.org/std/primitive.str.html#method.trim_start_matches
+pub async fn get_comments_by_apod_id(
+    State(mut am_database): State<Store>,
+    Path(source_id): Path<String>,
+    // localhost:3000/comment/apod_id=3
+) -> Result<Json<Vec<Comment>>, AppError> {
+    // Instantiate an empty vector to store the comments
+    // let mut all_comments: Vec<Comment> = Vec::new();
+    // Extract the answer_id value
+    let apod_id = source_id
+        .trim_start_matches("apod_id=")
+        .parse::<i32>()
+        .unwrap();
+    // Fetch comments by apod_id
+    let all_comments = am_database
+        .get_all_comments_by_apod_id(ApodId(apod_id))
+        .await?;
+    Ok(Json(all_comments))
+}
+
+pub async fn create_comment(
+    State(mut am_database): State<Store>,
+    Json(comment): Json<CreateComment>,
+) -> Result<Json<Comment>, AppError> {
+    dbg!("CREATED COMMENT:");
+    dbg!(&comment);
+    let new_comment = am_database
+        .add_comment(comment.content, comment.apod_id)
+        .await?;
+    Ok(Json(new_comment))
+}
+
+
