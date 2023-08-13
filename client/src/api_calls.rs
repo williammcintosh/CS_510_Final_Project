@@ -30,3 +30,36 @@ pub async fn get_all_apods() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+pub async fn post_user(
+    email: &str,
+    password: &str,
+    confirm_password: &str,
+) -> anyhow::Result<()> {
+    let api_port = get_api_port()?;
+    // Create a reqwest client
+    let client = Client::new();
+
+    // `serde_json::Value`
+    let body_json = json!({
+        "email": email,
+        "password": password,
+        "confirm_password": confirm_password,
+    });
+
+    let url = format!("http://localhost:{}", api_port) + "/users";
+    println!("URL = {}", url);
+
+    // Same as GET, but makes a POST request with appropriate header
+    let res = client
+        .post(url)
+        .header("Content-Type", "application/json")
+        .body(body_json.to_string())
+        .send()
+        .await?;
+
+    let body = res.text().await?;
+    println!("POST user: {}", body);
+
+    Ok(())
+}
