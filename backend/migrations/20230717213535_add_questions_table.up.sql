@@ -5,6 +5,5 @@ CREATE TABLE IF NOT EXISTS questions
     img_date   TEXT         NOT NULL,
     content    TEXT         NOT NULL,
     url        TEXT         NOT NULL,
-    tags       TEXT[],
     created_on TIMESTAMPTZ    NOT NULL DEFAULT NOW()
 );

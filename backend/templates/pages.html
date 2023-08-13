@@ -15,16 +15,6 @@
     <p>Content: {{ package.question.question.content }}</p>
     <p>Url: {{ package.question.question.url }}</p>
 
-    {% if package.question.question.tags %}
-    <ul>
-        Tags:
-        {% for tag in package.question.question.tags %}
-        <li>{{ tag }}</li>
-        {% endfor %}
-    </ul>
-
-    {% endif %}
-
     <h3>Comments for question:</h3>
     {% for comment in package.question.comments %}
     <p>

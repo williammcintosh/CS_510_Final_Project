@@ -5,13 +5,12 @@ use serde_derive::{Deserialize, Serialize};
 // This uses the `derive_more` crate to reduce the Display boilerplate (see below)
 #[derive(Clone, Debug, Display, Serialize, Deserialize, sqlx::FromRow)]
 #[display(
-    fmt = "id: {}, title: {}, img_date: {}, content: {}, url: {}, tags: {:?}",
+    fmt = "id: {}, title: {}, img_date: {}, content: {}, url: {}",
     id,
     title,
     img_date,
     content,
     url,
-    tags
 )]
 pub struct Question {
     pub id: QuestionId,
@@ -19,19 +18,17 @@ pub struct Question {
     pub img_date: String,
     pub content: String,
     pub url: String,
-    pub tags: Option<Vec<String>>,
 }
 
 impl Question {
     #[allow(dead_code)]
-    pub fn new(id: QuestionId, title: String, img_date: String, content: String, url: String, tags: Option<Vec<String>>) -> Self {
+    pub fn new(id: QuestionId, title: String, img_date: String, content: String, url: String) -> Self {
         Question {
             id,
             title,
             img_date,
             content,
             url,
-            tags,
         }
     }
 }
@@ -86,7 +83,6 @@ pub struct CreateQuestion {
     pub img_date: String,
     pub content: String,
     pub url: String,
-    pub tags: Option<Vec<String>>,
 }
 
 #[derive(Deserialize)]
@@ -101,5 +97,4 @@ pub struct UpdateQuestion {
     pub img_date: String,
     pub content: String,
     pub url: String,
-    pub tags: Option<Vec<String>>,
 }

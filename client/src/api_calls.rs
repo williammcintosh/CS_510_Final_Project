@@ -63,3 +63,38 @@ pub async fn post_user(
 
     Ok(())
 }
+
+pub async fn post_new_question(
+    title: &str,
+    img_date: &str,
+    content: &str,
+    url: &str,
+) -> anyhow::Result<()> {
+    let api_port = get_api_port()?;
+    // Create a reqwest client
+    let client = Client::new();
+
+    // `serde_json::Value`
+    let body_json = json!({
+        "title": title,
+        "img_date": img_date,
+        "content": content,
+        "url": url,
+    });
+
+    let url = format!("http://localhost:{}", api_port) + "/question";
+    println!("URL = {}", url);
+
+    // Same as GET, but makes a POST request with appropriate header
+    let res = client
+        .post(url)
+        .header("Content-Type", "application/json")
+        .body(body_json.to_string())
+        .send()
+        .await?;
+
+    let body = res.text().await?;
+    println!("POST content: {}", body);
+
+    Ok(())
+}

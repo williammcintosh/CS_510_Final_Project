@@ -79,7 +79,7 @@ pub async fn create_question(
     Json(question): Json<CreateQuestion>,
 ) -> Result<Json<Question>, AppError> {
     let question = am_database
-        .add_question(question.title, question.img_date, question.content, question.url, question.tags)
+        .add_question(question.title, question.img_date, question.content, question.url)
         .await?;
 
     Ok(Json(question))
@@ -164,10 +164,7 @@ pub async fn login(
     }
 
     let existing_user = database.get_user(&creds.email).await?;
-    println!("The email you typed is:    {}", creds.email.to_string());
-    println!("The password you typed is: {}", creds.password.to_string());
-    println!("The email in the db is:    {}", existing_user.email.to_string());
-    println!("The password in the db is: {}", existing_user.password.to_string());
+
     let is_password_correct =
         match argon2::verify_encoded(&*existing_user.password, creds.password.as_bytes()) {
             Ok(result) => result,
