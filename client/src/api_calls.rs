@@ -64,7 +64,7 @@ pub async fn post_user(
     Ok(())
 }
 
-pub async fn post_new_question(
+pub async fn post_new_apod(
     title: &str,
     img_date: &str,
     content: &str,
@@ -82,7 +82,7 @@ pub async fn post_new_question(
         "url": url,
     });
 
-    let url = format!("http://localhost:{}", api_port) + "/question";
+    let url = format!("http://localhost:{}", api_port) + "/apod";
     println!("URL = {}", url);
 
     // Same as GET, but makes a POST request with appropriate header
@@ -112,7 +112,7 @@ pub async fn post_new_comment(
     let body_json = json!({
         "content": content,
         "reference": {
-            "Question": reference
+            "Apod": reference
         },
         "user_id": user_id,
     });
@@ -135,7 +135,7 @@ pub async fn post_new_comment(
 }
 
 pub async fn post_new_favorite(
-    question_id: i32,
+    apod_id: i32,
     user_id: i32,
 ) -> anyhow::Result<()> {
     let api_port = get_api_port()?;
@@ -144,7 +144,7 @@ pub async fn post_new_favorite(
 
     // `serde_json::Value`
     let body_json = json!({
-        "question_id": question_id,
+        "apod_id": apod_id,
         "user_id": user_id,
     });
 

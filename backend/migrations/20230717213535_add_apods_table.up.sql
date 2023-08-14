@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS questions
+CREATE TABLE IF NOT EXISTS apods
 (
     id         serial PRIMARY KEY,
     title      VARCHAR(255) NOT NULL,

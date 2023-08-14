@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Heap Overrun - Questions</title>
+    <title>Favorite APODS</title>
 </head>
 <body>
-<h1>Questions</h1>
+<h1>Apods</h1>
 
 {% for package in page_packages %}
 <div class="package">
-    <h2>Question: {{ package.question.question.title }}</h2>
-    <p>Image Date: {{ package.question.question.img_date }}</p>
-    <p>Content: {{ package.question.question.content }}</p>
-    <p>Url: {{ package.question.question.url }}</p>
+    <h2>Apod: {{ package.apod.apod.title }}</h2>
+    <p>Image Date: {{ package.apod.apod.img_date }}</p>
+    <p>Content: {{ package.apod.apod.content }}</p>
+    <p>Url: {{ package.apod.apod.url }}</p>
 
-    <h3>Comments for question:</h3>
-    {% for comment in package.question.comments %}
+    <h3>Comments for apod:</h3>
+    {% for comment in package.apod.comments %}
     <p>
         Comment Content: {{comment.content}}
     </p>

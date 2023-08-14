@@ -2,6 +2,6 @@
 CREATE TABLE IF NOT EXISTS favorites
 (
     id                     serial PRIMARY KEY,
-    question_id            integer REFERENCES questions ON DELETE CASCADE,
+    apod_id            integer REFERENCES apods ON DELETE CASCADE,
     user_id                integer REFERENCES users ON DELETE CASCADE
 );

@@ -1,5 +1,5 @@
 use crate::make_db_id;
-use crate::models::question::QuestionId;
+use crate::models::apod::ApodId;
 use crate::models::user::{UserId};
 use axum::response::{IntoResponse, Response};
 use axum::Json;
@@ -18,7 +18,7 @@ make_db_id!(CommentId);
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum CommentReference {
-    Question(QuestionId),
+    Apod(ApodId),
 }
 
 impl IntoResponse for Comment {

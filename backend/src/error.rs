@@ -6,7 +6,7 @@ use sqlx::Error;
 
 #[derive(Debug)]
 pub enum AppError {
-    Question(QuestionError),
+    Apod(ApodError),
     Database(sqlx::Error),
     MissingCredentials,
     InvalidPassword,
@@ -19,15 +19,15 @@ pub enum AppError {
 }
 
 #[derive(derive_more::Display, Debug)]
-pub enum QuestionError {
+pub enum ApodError {
     InvalidId,
 }
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let (status, error_message) = match self {
-            AppError::Question(err) => match err {
-                QuestionError::InvalidId => (StatusCode::NOT_FOUND, err.to_string()),
+            AppError::Apod(err) => match err {
+                ApodError::InvalidId => (StatusCode::NOT_FOUND, err.to_string()),
             },
             AppError::Database(err) => (StatusCode::SERVICE_UNAVAILABLE, err.to_string()),
             AppError::Any(err) => {

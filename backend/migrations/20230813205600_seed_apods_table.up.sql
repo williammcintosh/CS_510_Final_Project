@@ -1,5 +1,5 @@
 -- Add up migration script here
-INSERT INTO questions(
+INSERT INTO apods(
     title,
     img_date,
     content,
@@ -10,7 +10,7 @@ INSERT INTO questions(
     'Why is the Cigar Galaxy billowing red smoke?  M82, as this starburst',
     'https://apod.nasa.gov/apod/image/2308/M82_HubblePathak_1080.jpg'
 );
-INSERT INTO questions(
+INSERT INTO apods(
     title,
     img_date,
     content,
