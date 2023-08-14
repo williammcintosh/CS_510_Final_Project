@@ -102,6 +102,7 @@ pub async fn post_new_question(
 pub async fn post_new_comment(
     content: &str,
     reference: i32,
+    user_id: i32,
 ) -> anyhow::Result<()> {
     let api_port = get_api_port()?;
     // Create a reqwest client
@@ -110,7 +111,10 @@ pub async fn post_new_comment(
     // `serde_json::Value`
     let body_json = json!({
         "content": content,
-        "reference": reference,
+        "reference": {
+            "Question": reference
+        },
+        "user_id": user_id,
     });
 
     let url = format!("http://localhost:{}", api_port) + "/comment";

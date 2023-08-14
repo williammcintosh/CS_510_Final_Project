@@ -3,12 +3,14 @@ use crate::models::question::QuestionId;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use serde_derive::{Deserialize, Serialize};
+use crate::models::user::{UserId};
 
 #[derive(Serialize, Deserialize, Debug, Clone, sqlx::FromRow)]
 pub struct Comment {
     pub id: Option<CommentId>,
     pub content: String,
     pub reference: CommentReference,
+    pub user_id: Option<UserId>,
 }
 
 make_db_id!(CommentId);
