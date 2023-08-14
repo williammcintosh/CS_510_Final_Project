@@ -7,7 +7,7 @@ use http::request::Parts;
 use jsonwebtoken::{decode, DecodingKey, EncodingKey, Validation};
 use once_cell::sync::Lazy;
 use std::convert::Infallible;
-
+use crate::make_db_id;
 use crate::error::AppError;
 use serde_derive::{Deserialize, Serialize};
 use sqlx::decode;
@@ -17,6 +17,8 @@ pub struct User {
     pub email: String,
     pub password: String,
 }
+
+make_db_id!(UserId);
 
 #[derive(Serialize, Deserialize, sqlx::FromRow)]
 pub struct UserSignup {

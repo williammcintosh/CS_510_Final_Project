@@ -17,7 +17,9 @@ async fn main() -> anyhow::Result<()> {
     //     "https://apod.nasa.gov/apod/image/2308/SunMonster_Wenz_960.jpg",
     // ).await?;
 
-    api_calls::post_new_comment("Such smokiness!!!!", 2).await?;
+    api_calls::post_new_comment("I didn't know sun monster's existed!", 1, 1).await?;
+    api_calls::post_new_comment("Such amazing sun flares!", 1, 2).await?;
+    api_calls::post_new_comment("Such smokiness!", 2, 2).await?;
 
     Ok(())
 }

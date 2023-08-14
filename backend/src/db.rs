@@ -15,7 +15,7 @@ use crate::models::question::{
 use crate::models::apod::{
     GetApodById, IntoApodId, Apod, ApodId, UpdateApod,
 };
-use crate::models::user::{User, UserSignup};
+use crate::models::user::{User, UserId, UserSignup};
 
 #[derive(Clone)]
 pub struct Store {
@@ -227,20 +227,22 @@ SELECT title, img_date, content, url, id FROM questions WHERE id = $1
 
         let res = sqlx::query(
             r#"
-            INSERT INTO comments (content, question_id)
-            VALUES ($1, $2)
+            INSERT INTO comments (content, question_id, user_id)
+            VALUES ($1, $2, $3)
             RETURNING *
             "#,
         )
-            .bind(comment.content)
-            .bind(question_id)
-            .fetch_one(&self.conn_pool)
-            .await?;
+        .bind(comment.content)
+        .bind(question_id)
+        .bind(comment.user_id)
+        .fetch_one(&self.conn_pool)
+        .await?;
 
         let comment = Comment {
             id: Some(CommentId(res.get("id"))),
             content: res.get("content"),
             reference: comment.reference,
+            user_id: Some(UserId(res.get("user_id"))),
         };
 
         Ok(comment)
@@ -296,6 +298,7 @@ SELECT title, img_date, content, url, id FROM questions WHERE id = $1
                             id: Some(CommentId(row.get("id"))),
                             content: row.get("content"),
                             reference: CommentReference::Question(QuestionId(question_id)),
+                            user_id: Some(UserId(row.get("user_id"))),
                         })
                     } else {
                         None
