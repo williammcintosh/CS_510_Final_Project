@@ -225,6 +225,8 @@ SELECT title, img_date, content, url, id FROM questions WHERE id = $1
             CommentReference::Question(qid) => Some(qid.0)
         }.unwrap_or_default();
 
+        let user_id = i32::from(comment.user_id.unwrap_or(UserId(0)));
+
         let res = sqlx::query(
             r#"
             INSERT INTO comments (content, question_id, user_id)
@@ -234,7 +236,7 @@ SELECT title, img_date, content, url, id FROM questions WHERE id = $1
         )
         .bind(comment.content)
         .bind(question_id)
-        .bind(comment.user_id)
+        .bind(user_id)
         .fetch_one(&self.conn_pool)
         .await?;
 
