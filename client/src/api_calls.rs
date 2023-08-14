@@ -98,3 +98,34 @@ pub async fn post_new_question(
 
     Ok(())
 }
+
+pub async fn post_new_comment(
+    content: &str,
+    reference: i32,
+) -> anyhow::Result<()> {
+    let api_port = get_api_port()?;
+    // Create a reqwest client
+    let client = Client::new();
+
+    // `serde_json::Value`
+    let body_json = json!({
+        "content": content,
+        "reference": reference,
+    });
+
+    let url = format!("http://localhost:{}", api_port) + "/comment";
+    println!("URL = {}", url);
+
+    // Same as GET, but makes a POST request with appropriate header
+    let res = client
+        .post(url)
+        .header("Content-Type", "application/json")
+        .body(body_json.to_string())
+        .send()
+        .await?;
+
+    let body = res.text().await?;
+    println!("POST comment: {}", body);
+
+    Ok(())
+}

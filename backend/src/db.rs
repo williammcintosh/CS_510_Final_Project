@@ -7,7 +7,7 @@ use sqlx::{PgPool, Row};
 use tracing::info;
 
 use crate::error::AppError;
-use crate::models::comment::{Comment, CommentId, CommentReference};
+use crate::models::comment::{Comment, CommentId, IntoCommentId, CommentReference};
 use crate::models::page::{PagePackage, QuestionWithComments};
 use crate::models::question::{
     GetQuestionById, IntoQuestionId, Question, QuestionId, UpdateQuestion,

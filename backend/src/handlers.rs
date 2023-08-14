@@ -20,7 +20,7 @@ use crate::models::apod::{
     CreateApod, GetApodById, Apod, ApodId, UpdateApod,
 };
 use crate::models::user::{Claims, OptionalClaims, User, UserSignup, KEYS};
-
+use crate::models::comment::{Comment, CommentReference};
 use crate::template::TEMPLATES;
 
 #[allow(dead_code)]
@@ -83,6 +83,19 @@ pub async fn create_question(
 
     Ok(Json(question))
 }
+
+pub async fn post_comment(
+    State(mut am_database): State<Store>,
+    Json(comment): Json<Comment>,
+) -> Result<Json<Comment>, AppError> {
+    let question_id = match &comment.reference {
+        CommentReference::Question(qid) => Some(qid.0),
+    }.unwrap_or_default();
+
+    let new_comment = am_database.create_comment(comment).await?;
+    Ok(Json(new_comment))
+}
+
 
 pub async fn update_question(
     State(mut am_database): State<Store>,
