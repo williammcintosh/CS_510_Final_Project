@@ -12,6 +12,9 @@ use crate::models::page::{PagePackage, QuestionWithComments};
 use crate::models::question::{
     GetQuestionById, IntoQuestionId, Question, QuestionId, UpdateQuestion,
 };
+use crate::models::favorite::{
+    GetFavoriteById, IntoFavoriteId, Favorite, FavoriteId,
+};
 use crate::models::apod::{
     GetApodById, IntoApodId, Apod, ApodId, UpdateApod,
 };
@@ -132,6 +135,36 @@ SELECT * FROM questions
         };
 
         Ok(new_question)
+    }
+
+    pub async fn add_favorite(
+        &mut self,
+        question_id: Option<QuestionId>,
+        user_id: Option<UserId>,
+    ) -> Result<Favorite, AppError> {
+
+        let q_id = i32::from(question_id.unwrap_or(QuestionId(0)));
+        let u_id = i32::from(user_id.unwrap_or(UserId(0)));
+
+        let res = sqlx::query(
+            r#"
+                INSERT INTO "favorites"(question_id, user_id)
+                VALUES ($1, $2)
+                RETURNING *
+            "#
+        )
+        .bind(q_id)
+        .bind(u_id)
+        .fetch_one(&self.conn_pool)
+        .await?;
+
+        let new_favorite = Favorite {
+            id: Some(FavoriteId(res.get("id"))),
+            question_id: Some(QuestionId(res.get("question_id"))),
+            user_id: Some(UserId(res.get("user_id"))),
+        };
+
+        Ok(new_favorite)
     }
 
     pub async fn update_question(

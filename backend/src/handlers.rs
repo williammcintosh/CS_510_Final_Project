@@ -21,6 +21,9 @@ use crate::models::apod::{
 };
 use crate::models::user::{Claims, OptionalClaims, User, UserSignup, KEYS};
 use crate::models::comment::{Comment, CommentReference};
+use crate::models::favorite::{
+    CreateFavorite, GetFavoriteById, Favorite, FavoriteId,
+};
 use crate::template::TEMPLATES;
 
 #[allow(dead_code)]
@@ -94,6 +97,17 @@ pub async fn post_comment(
 
     let new_comment = am_database.create_comment(comment).await?;
     Ok(Json(new_comment))
+}
+
+pub async fn post_favorite(
+    State(mut am_database): State<Store>,
+    Json(favorite): Json<CreateFavorite>,
+) -> Result<Json<Favorite>, AppError> {
+    let favorite = am_database
+        .add_favorite(favorite.question_id, favorite.user_id)
+        .await?;
+
+    Ok(Json(favorite))
 }
 
 

@@ -133,3 +133,34 @@ pub async fn post_new_comment(
 
     Ok(())
 }
+
+pub async fn post_new_favorite(
+    question_id: i32,
+    user_id: i32,
+) -> anyhow::Result<()> {
+    let api_port = get_api_port()?;
+    // Create a reqwest client
+    let client = Client::new();
+
+    // `serde_json::Value`
+    let body_json = json!({
+        "question_id": question_id,
+        "user_id": user_id,
+    });
+
+    let url = format!("http://localhost:{}", api_port) + "/favorite";
+    println!("URL = {}", url);
+
+    // Same as GET, but makes a POST request with appropriate header
+    let res = client
+        .post(url)
+        .header("Content-Type", "application/json")
+        .body(body_json.to_string())
+        .send()
+        .await?;
+
+    let body = res.text().await?;
+    println!("POST favorite: {}", body);
+
+    Ok(())
+}
