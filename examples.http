@@ -1,4 +1,4 @@
-POST http://localhost:3000/question
+POST http://localhost:3000/apod
 Content-Type: application/json
 
 {
@@ -7,11 +7,11 @@ Content-Type: application/json
 }
 
 ###
-GET http://localhost:3000/questions
+GET http://localhost:3000/apods
 Accept: application/json
 
 ###
-GET http://localhost:3000/question/1
+GET http://localhost:3000/apod/1
 Accept: application/json
 
 ###
@@ -19,7 +19,7 @@ GET http://localhost:3000/blargh
 Accept: application/json
 
 ###
-DELETE http://localhost:3000/question?question_id=1
+DELETE http://localhost:3000/apod?apod_id=1
 Content-Type: application/json
 
 {
@@ -59,5 +59,5 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "question_id": 1
+  "apod_id": 1
 }

@@ -1,7 +1,11 @@
 use axum::extract::FromRequestParts;
-use axum::headers::authorization::Bearer;
-use axum::headers::Authorization;
-use axum::{async_trait, RequestPartsExt, TypedHeader};
+// use axum::headers::authorization::Bearer;
+// use axum::headers::Authorization;
+use axum::{
+    async_trait,
+    // RequestPartsExt,
+    // TypedHeader
+};
 use cookie::Cookie;
 use http::request::Parts;
 use jsonwebtoken::{decode, DecodingKey, EncodingKey, Validation};
@@ -10,7 +14,7 @@ use std::convert::Infallible;
 use crate::make_db_id;
 use crate::error::AppError;
 use serde_derive::{Deserialize, Serialize};
-use sqlx::decode;
+// use sqlx::decode;
 
 #[derive(Serialize, Deserialize, sqlx::FromRow)]
 pub struct User {
@@ -27,9 +31,9 @@ pub struct UserSignup {
     pub confirm_password: String,
 }
 
-pub struct LoggedInUser {
-    pub token: Claims,
-}
+// pub struct LoggedInUser {
+//     pub token: Claims,
+// }
 
 #[derive(Serialize, Deserialize, derive_more::Display)]
 #[display(fmt = "id: {}, email: {}, exp: {}", id, email, exp)]

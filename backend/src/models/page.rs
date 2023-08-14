@@ -1,12 +1,12 @@
 use crate::models::comment::Comment;
-use crate::models::question::Question;
+use crate::models::apod::Apod;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use serde_derive::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PagePackage {
-    pub question: QuestionWithComments
+    pub apod: ApodWithComments
 }
 
 impl IntoResponse for PagePackage {
@@ -16,7 +16,7 @@ impl IntoResponse for PagePackage {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct QuestionWithComments {
-    pub question: Question,
+pub struct ApodWithComments {
+    pub apod: Apod,
     pub comments: Vec<Comment>,
 }

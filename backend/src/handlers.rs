@@ -6,29 +6,35 @@ use http::header::{LOCATION, SET_COOKIE};
 use http::{HeaderValue, StatusCode};
 use hyper::Body;
 use jsonwebtoken::Header;
-use serde_json::{json, Value};
+use serde_json::{
+    // json,
+    Value
+};
 use tera::Context;
 use tracing::error;
 
 use crate::db::Store;
 use crate::error::AppError;
 use crate::get_timestamp_after_8_hours;
-use crate::models::question::{
-    CreateQuestion, GetQuestionById, Question, QuestionId, UpdateQuestion,
-};
 use crate::models::apod::{
     CreateApod, GetApodById, Apod, ApodId, UpdateApod,
 };
 use crate::models::user::{Claims, OptionalClaims, User, UserSignup, KEYS};
-use crate::models::comment::{Comment, CommentReference};
+use crate::models::comment::{
+    Comment,
+    // CommentReference
+};
 use crate::models::favorite::{
-    CreateFavorite, GetFavoriteById, Favorite, FavoriteId,
+    CreateFavorite,
+    // GetFavoriteById,
+    Favorite,
+    // FavoriteId,
 };
 use crate::template::TEMPLATES;
 
 #[allow(dead_code)]
 pub async fn root(
-    State(mut am_database): State<Store>,
+    State(am_database): State<Store>,
     OptionalClaims(claims): OptionalClaims,
 ) -> Result<Html<String>, AppError> {
     let mut context = Context::new();
@@ -39,7 +45,7 @@ pub async fn root(
         context.insert("claims", &claims_data);
         context.insert("is_logged_in", &true);
         // Get all the page data
-        let page_packages = am_database.get_all_question_pages().await?;
+        let page_packages = am_database.get_all_apod_pages().await?;
         context.insert("page_packages", &page_packages);
 
         "pages.html" // Use the new template when logged in
@@ -60,40 +66,40 @@ pub async fn root(
 }
 
 // CRUD create - read - update - delete
-pub async fn get_questions(
+pub async fn get_apods(
     State(mut am_database): State<Store>,
-) -> Result<Json<Vec<Question>>, AppError> {
-    let all_questions = am_database.get_all_questions().await?;
+) -> Result<Json<Vec<Apod>>, AppError> {
+    let all_apods = am_database.get_all_apods().await?;
 
-    Ok(Json(all_questions))
+    Ok(Json(all_apods))
 }
 
-pub async fn get_question_by_id(
+pub async fn get_apod_by_id(
     State(mut am_database): State<Store>,
-    Path(query): Path<i32>, // localhost:3000/question/5
-) -> Result<Json<Question>, AppError> {
-    let question = am_database.get_question_by_id(QuestionId(query)).await?;
-    Ok(Json(question))
+    Path(query): Path<i32>, // localhost:3000/apod/5
+) -> Result<Json<Apod>, AppError> {
+    let apod = am_database.get_apod_by_id(ApodId(query)).await?;
+    Ok(Json(apod))
 }
 
-pub async fn create_question(
+pub async fn create_apod(
     State(mut am_database): State<Store>,
-    Json(question): Json<CreateQuestion>,
-) -> Result<Json<Question>, AppError> {
-    let question = am_database
-        .add_question(question.title, question.img_date, question.content, question.url)
+    Json(apod): Json<CreateApod>,
+) -> Result<Json<Apod>, AppError> {
+    let apod = am_database
+        .add_apod(apod.title, apod.img_date, apod.content, apod.url)
         .await?;
 
-    Ok(Json(question))
+    Ok(Json(apod))
 }
 
 pub async fn post_comment(
-    State(mut am_database): State<Store>,
+    State(am_database): State<Store>,
     Json(comment): Json<Comment>,
 ) -> Result<Json<Comment>, AppError> {
-    let question_id = match &comment.reference {
-        CommentReference::Question(qid) => Some(qid.0),
-    }.unwrap_or_default();
+    // let apod_id = match &comment.reference {
+    //     CommentReference::Apod(qid) => Some(qid.0),
+    // }.unwrap_or_default();
 
     let new_comment = am_database.create_comment(comment).await?;
     Ok(Json(new_comment))
@@ -104,32 +110,32 @@ pub async fn post_favorite(
     Json(favorite): Json<CreateFavorite>,
 ) -> Result<Json<Favorite>, AppError> {
     let favorite = am_database
-        .add_favorite(favorite.question_id, favorite.user_id)
+        .add_favorite(favorite.apod_id, favorite.user_id)
         .await?;
 
     Ok(Json(favorite))
 }
 
 
-pub async fn update_question(
+pub async fn update_apod(
     State(mut am_database): State<Store>,
-    Json(question): Json<UpdateQuestion>,
-) -> Result<Json<Question>, AppError> {
-    let updated_question = am_database.update_question(question).await?;
-    Ok(Json(updated_question))
+    Json(apod): Json<UpdateApod>,
+) -> Result<Json<Apod>, AppError> {
+    let updated_apod = am_database.update_apod(apod).await?;
+    Ok(Json(updated_apod))
 }
 
-pub async fn delete_question(
+pub async fn delete_apod(
     State(mut am_database): State<Store>,
-    Query(query): Query<GetQuestionById>,
+    Query(query): Query<GetApodById>,
 ) -> Result<(), AppError> {
-    am_database.delete_question(query.question_id).await?;
+    am_database.delete_apod(query.apod_id).await?;
 
     Ok(())
 }
 
 pub async fn register(
-    State(mut database): State<Store>,
+    State(database): State<Store>,
     Json(mut credentials): Json<UserSignup>,
 ) -> Result<Json<Value>, AppError> {
     // We should also check to validate other things at some point like email address being in right format
@@ -172,7 +178,7 @@ pub async fn register(
 }
 
 pub async fn login(
-    State(mut database): State<Store>,
+    State(database): State<Store>,
     Form(creds): Form<User>,
 ) -> Result<Response<Body>, AppError> {
     if creds.email.is_empty() || creds.password.is_empty() {

@@ -1,22 +1,22 @@
-use crate::make_db_id;
+// use crate::make_db_id;
 use derive_more::Display;
 use serde_derive::{Deserialize, Serialize};
-use crate::models::question::QuestionId;
+use crate::models::apod::ApodId;
 use crate::models::user::{UserId};
 
 #[derive(Serialize, Deserialize, Debug, Clone, sqlx::FromRow)]
 pub struct Favorite {
     pub id: Option<FavoriteId>,
-    pub question_id: Option<QuestionId>,
+    pub apod_id: Option<ApodId>,
     pub user_id: Option<UserId>,
 }
 
 impl Favorite {
     #[allow(dead_code)]
-    pub fn new(id: Option<FavoriteId>, question_id: Option<QuestionId>, user_id: Option<UserId>) -> Self {
+    pub fn new(id: Option<FavoriteId>, apod_id: Option<ApodId>, user_id: Option<UserId>) -> Self {
         Favorite {
             id,
-            question_id,
+            apod_id,
             user_id,
         }
     }
@@ -68,7 +68,7 @@ impl IntoFavoriteId for FavoriteId {
 // Clients use this to create new requests
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateFavorite {
-    pub question_id: Option<QuestionId>,
+    pub apod_id: Option<ApodId>,
     pub user_id: Option<UserId>,
 }
 

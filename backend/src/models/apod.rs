@@ -1,51 +1,50 @@
-use crate::make_db_id;
+// use crate::make_db_id;
 use derive_more::Display;
 use serde_derive::{Deserialize, Serialize};
-use chrono::{DateTime, TimeZone, NaiveDateTime, Utc};
 
 // This uses the `derive_more` crate to reduce the Display boilerplate (see below)
 #[derive(Clone, Debug, Display, Serialize, Deserialize, sqlx::FromRow)]
 #[display(
-fmt = "id: {}, img_date: {}, explanation: {}, title: {}, url: {}",
-id,
-img_date,
-explanation,
-title,
-url,
+    fmt = "id: {}, title: {}, img_date: {}, content: {}, url: {}",
+    id,
+    title,
+    img_date,
+    content,
+    url,
 )]
 pub struct Apod {
     pub id: ApodId,
-    pub img_date: DateTime<Utc>,
-    pub explanation: String,
     pub title: String,
+    pub img_date: String,
+    pub content: String,
     pub url: String,
 }
 
 impl Apod {
     #[allow(dead_code)]
-    pub fn new(id: ApodId, img_date: DateTime<Utc>, explanation: String, title: String, url: String) -> Self {
+    pub fn new(id: ApodId, title: String, img_date: String, content: String, url: String) -> Self {
         Apod {
             id,
-            img_date,
-            explanation,
             title,
+            img_date,
+            content,
             url,
         }
     }
 }
 
 #[derive(
-Clone,
-Copy,
-Debug,
-sqlx::Type,
-Display,
-derive_more::Deref,
-PartialEq,
-Eq,
-Hash,
-Serialize,
-Deserialize,
+    Clone,
+    Copy,
+    Debug,
+    sqlx::Type,
+    Display,
+    derive_more::Deref,
+    PartialEq,
+    Eq,
+    Hash,
+    Serialize,
+    Deserialize,
 )]
 pub struct ApodId(pub i32);
 
@@ -80,9 +79,9 @@ impl IntoApodId for ApodId {
 // Clients use this to create new requests
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateApod {
-    pub img_date: DateTime<Utc>,
-    pub explanation: String,
     pub title: String,
+    pub img_date: String,
+    pub content: String,
     pub url: String,
 }
 
@@ -94,8 +93,8 @@ pub struct GetApodById {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UpdateApod {
     pub id: ApodId,
-    pub img_date: DateTime<Utc>,
-    pub explanation: String,
     pub title: String,
+    pub img_date: String,
+    pub content: String,
     pub url: String,
 }

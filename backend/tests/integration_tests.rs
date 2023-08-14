@@ -5,13 +5,13 @@ use tower::ServiceExt;
 
 
 use backend::main_routes::app;
-use backend::question::{CreateQuestion, Question};
+use backend::apod::{CreateApod, Apod};
 
-#[sqlx::test(fixtures("0001_questions"))]
-async fn test_add_question(db_pool: PgPool) {
+#[sqlx::test(fixtures("0001_apods"))]
+async fn test_add_apod(db_pool: PgPool) {
     let mut app = app(db_pool).await;
 
-    let question = CreateQuestion {
+    let apod = CreateApod {
         title: "New Title".into(),
         content: "Test content2".into(),
     };
@@ -20,9 +20,9 @@ async fn test_add_question(db_pool: PgPool) {
         .oneshot(
             Request::builder()
                 .method(http::Method::POST)
-                .uri("/question")
+                .uri("/apod")
                 .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
-                .body(Body::from(serde_json::to_string(&question).unwrap()))
+                .body(Body::from(serde_json::to_string(&apod).unwrap()))
                 .unwrap(),
         )
         .await
@@ -31,15 +31,15 @@ async fn test_add_question(db_pool: PgPool) {
     assert_eq!(response.status(), StatusCode::OK);
 }
 
-#[sqlx::test(fixtures("0001_questions"))]
-async fn test_get_questions(db_pool: PgPool) {
+#[sqlx::test(fixtures("0001_apods"))]
+async fn test_get_apods(db_pool: PgPool) {
     let app = app(db_pool).await;
 
     let response = app
         .oneshot(
             Request::builder()
                 .method(http::Method::GET)
-                .uri("/questions")
+                .uri("/apods")
                 .body(Body::empty())
                 .unwrap(),
         )
@@ -49,19 +49,19 @@ async fn test_get_questions(db_pool: PgPool) {
     assert_eq!(response.status(), StatusCode::OK);
 
     let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
-    let questions: Vec<Question> = serde_json::from_slice(&body).unwrap();
-    assert!(!questions.is_empty());
+    let apods: Vec<Apod> = serde_json::from_slice(&body).unwrap();
+    assert!(!apods.is_empty());
 }
 
-#[sqlx::test(fixtures("0001_questions"))]
-async fn test_get_question_by_id(db_pool: PgPool) {
+#[sqlx::test(fixtures("0001_apods"))]
+async fn test_get_apod_by_id(db_pool: PgPool) {
     let app = app(db_pool).await;
 
     let response = app
         .oneshot(
             Request::builder()
                 .method(http::Method::GET)
-                .uri("/question/1")
+                .uri("/apod/1")
                 .body(Body::empty())
                 .unwrap(),
         )
@@ -71,15 +71,15 @@ async fn test_get_question_by_id(db_pool: PgPool) {
     assert_eq!(response.status(), StatusCode::OK);
 
     let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
-    let question: Question = serde_json::from_slice(&body).unwrap();
-    assert_eq!(question.id.0, 1);
+    let apod: Apod = serde_json::from_slice(&body).unwrap();
+    assert_eq!(apod.id.0, 1);
 }
 
-#[sqlx::test(fixtures("0001_questions"))]
-async fn test_update_question(db_pool: PgPool) {
+#[sqlx::test(fixtures("0001_apods"))]
+async fn test_update_apod(db_pool: PgPool) {
     let mut app = app(db_pool).await;
 
-    let updated_question = Question {
+    let updated_apod = Apod {
         id: 1.into(),
         title: "Updated Title".into(),
         content: "Updated content".into(),
@@ -89,10 +89,10 @@ async fn test_update_question(db_pool: PgPool) {
         .oneshot(
             Request::builder()
                 .method(http::Method::PUT)
-                .uri("/question")
+                .uri("/apod")
                 .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
                 .body(Body::from(
-                    serde_json::to_string(&updated_question).unwrap(),
+                    serde_json::to_string(&updated_apod).unwrap(),
                 ))
                 .unwrap(),
         )
@@ -102,12 +102,12 @@ async fn test_update_question(db_pool: PgPool) {
     assert_eq!(response.status(), StatusCode::OK);
 }
 
-#[sqlx::test(fixtures("0001_questions"))]
-async fn test_delete_question(db_pool: PgPool) {
+#[sqlx::test(fixtures("0001_apods"))]
+async fn test_delete_apod(db_pool: PgPool) {
     println!("In test delete");
     let app = app(db_pool).await;
 
-    let query_uri = format!("/question?question_id=1");
+    let query_uri = format!("/apod?apod_id=1");
 
     let response = app
         .oneshot(
@@ -121,7 +121,7 @@ async fn test_delete_question(db_pool: PgPool) {
         .await
         .unwrap();
 
-    dbg!("DELETED QUESTION RESPONSE");
+    dbg!("DELETED APOD RESPONSE");
     dbg!(&response);
     assert_eq!(response.status(), StatusCode::OK);
 }

@@ -1,29 +1,38 @@
 use axum::Json;
 use serde_json::Value;
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{
+    Arc,
+    Mutex,
+    // RwLock
+};
 
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{PgPool, Row};
 use tracing::info;
 
 use crate::error::AppError;
-use crate::models::comment::{Comment, CommentId, IntoCommentId, CommentReference};
-use crate::models::page::{PagePackage, QuestionWithComments};
-use crate::models::question::{
-    GetQuestionById, IntoQuestionId, Question, QuestionId, UpdateQuestion,
+use crate::models::comment::{
+    Comment,
+    CommentId,
+    // IntoCommentId,
+    CommentReference
 };
-use crate::models::favorite::{
-    GetFavoriteById, IntoFavoriteId, Favorite, FavoriteId,
-};
+use crate::models::page::{PagePackage, ApodWithComments};
 use crate::models::apod::{
     GetApodById, IntoApodId, Apod, ApodId, UpdateApod,
+};
+use crate::models::favorite::{
+    GetFavoriteById,
+    // IntoFavoriteId,
+    Favorite,
+    FavoriteId,
 };
 use crate::models::user::{User, UserId, UserSignup};
 
 #[derive(Clone)]
 pub struct Store {
     pub conn_pool: PgPool,
-    pub questions: Arc<Mutex<Vec<Question>>>,
+    pub apods: Arc<Mutex<Vec<Apod>>>,
 }
 
 pub async fn new_pool() -> PgPool {
@@ -39,7 +48,7 @@ impl Store {
     pub fn with_pool(pool: PgPool) -> Self {
         Self {
             conn_pool: pool,
-            questions: Default::default(),
+            apods: Default::default(),
         }
     }
 
@@ -55,20 +64,20 @@ impl Store {
         Ok(())
     }
 
-    pub async fn get_all_questions(&mut self) -> Result<Vec<Question>, AppError> {
+    pub async fn get_all_apods(&mut self) -> Result<Vec<Apod>, AppError> {
         let rows = sqlx::query!(
             r#"
-SELECT * FROM questions
+SELECT * FROM apods
 "#
         )
             .fetch_all(&self.conn_pool)
             .await?;
 
-        let questions: Vec<_> = rows
+        let apods: Vec<_> = rows
             .into_iter()
             .map(|row| {
-                Question {
-                    id: row.id.into(), // Assuming you have a From<u32> for QuestionId
+                Apod {
+                    id: row.id.into(), // Assuming you have a From<u32> for ApodId
                     title: row.title,
                     img_date: row.img_date,
                     content: row.content,
@@ -77,44 +86,44 @@ SELECT * FROM questions
             })
             .collect();
 
-        Ok(questions)
+        Ok(apods)
     }
 
-    pub async fn get_question_by_id<T: IntoQuestionId>(
+    pub async fn get_apod_by_id<T: IntoApodId>(
         &mut self,
         id: T,
-    ) -> Result<Question, AppError> {
-        let id = id.into_question_id();
+    ) -> Result<Apod, AppError> {
+        let id = id.into_apod_id();
 
         let row = sqlx::query!(
             r#"
-    SELECT * FROM questions WHERE id = $1
+    SELECT * FROM apods WHERE id = $1
     "#,
             id.0,
         )
             .fetch_one(&self.conn_pool)
             .await?;
 
-        let question = Question {
-            id: row.id.into(), // Assuming you have a From<u32> for QuestionId
+        let apod = Apod {
+            id: row.id.into(), // Assuming you have a From<u32> for ApodId
             title: row.title,
             img_date: row.img_date,
             content: row.content,
             url: row.url,
         };
 
-        Ok(question)
+        Ok(apod)
     }
 
-    pub async fn add_question(
+    pub async fn add_apod(
         &mut self,
         title: String,
         img_date: String,
         content: String,
         url: String,
-    ) -> Result<Question, AppError> {
+    ) -> Result<Apod, AppError> {
         let res = sqlx::query!(
-            r#"INSERT INTO "questions"(title, img_date, content, url)
+            r#"INSERT INTO "apods"(title, img_date, content, url)
            VALUES ($1, $2, $3, $4)
            RETURNING *
         "#,
@@ -126,29 +135,29 @@ SELECT * FROM questions
             .fetch_one(&self.conn_pool)
             .await?;
 
-        let new_question = Question {
-            id: QuestionId(res.id),
+        let new_apod = Apod {
+            id: ApodId(res.id),
             title: res.title,
             img_date: res.img_date,
             content: res.content,
             url: res.url,
         };
 
-        Ok(new_question)
+        Ok(new_apod)
     }
 
     pub async fn add_favorite(
         &mut self,
-        question_id: Option<QuestionId>,
+        apod_id: Option<ApodId>,
         user_id: Option<UserId>,
     ) -> Result<Favorite, AppError> {
 
-        let q_id = i32::from(question_id.unwrap_or(QuestionId(0)));
+        let q_id = i32::from(apod_id.unwrap_or(ApodId(0)));
         let u_id = i32::from(user_id.unwrap_or(UserId(0)));
 
         let res = sqlx::query(
             r#"
-                INSERT INTO "favorites"(question_id, user_id)
+                INSERT INTO "favorites"(apod_id, user_id)
                 VALUES ($1, $2)
                 RETURNING *
             "#
@@ -160,60 +169,60 @@ SELECT * FROM questions
 
         let new_favorite = Favorite {
             id: Some(FavoriteId(res.get("id"))),
-            question_id: Some(QuestionId(res.get("question_id"))),
+            apod_id: Some(ApodId(res.get("apod_id"))),
             user_id: Some(UserId(res.get("user_id"))),
         };
 
         Ok(new_favorite)
     }
 
-    pub async fn update_question(
+    pub async fn update_apod(
         &mut self,
-        new_question: UpdateQuestion,
-    ) -> Result<Question, AppError> {
+        new_apod: UpdateApod,
+    ) -> Result<Apod, AppError> {
         sqlx::query!(
             r#"
-    UPDATE questions
+    UPDATE apods
     SET title = $1, img_date = $2, content = $3, url = $4
     WHERE id = $5
     "#,
-            new_question.title,
-            new_question.img_date,
-            new_question.content,
-            new_question.url,
-            new_question.id.0,
+            new_apod.title,
+            new_apod.img_date,
+            new_apod.content,
+            new_apod.url,
+            new_apod.id.0,
         )
             .execute(&self.conn_pool)
             .await?;
 
         let row = sqlx::query!(
             r#"
-SELECT title, img_date, content, url, id FROM questions WHERE id = $1
+SELECT title, img_date, content, url, id FROM apods WHERE id = $1
 "#,
-            new_question.id.0,
+            new_apod.id.0,
         )
             .fetch_one(&self.conn_pool)
             .await?;
 
-        let question = Question {
+        let apod = Apod {
             title: row.title,
             img_date: row.img_date,
             content: row.content,
             url: row.url,
-            id: QuestionId(row.id),
+            id: ApodId(row.id),
         };
 
-        Ok(question)
+        Ok(apod)
     }
 
-    pub async fn delete_question(&mut self, question_id: i32) -> Result<(), AppError> {
-        let question_id = question_id.into_question_id();
-        println!("DELETE - Question id is {}", &question_id);
+    pub async fn delete_apod(&mut self, apod_id: i32) -> Result<(), AppError> {
+        let apod_id = apod_id.into_apod_id();
+        println!("DELETE - Apod id is {}", &apod_id);
         sqlx::query!(
             r#"
-    DELETE FROM questions WHERE id = $1
+    DELETE FROM apods WHERE id = $1
     "#,
-            question_id.0,
+            apod_id.0,
         )
             .execute(&self.conn_pool)
             .await
@@ -254,21 +263,21 @@ SELECT title, img_date, content, url, id FROM questions WHERE id = $1
     }
 
     pub async fn create_comment(&self, comment: Comment) -> Result<Comment, AppError> {
-        let question_id = match &comment.reference {
-            CommentReference::Question(qid) => Some(qid.0)
+        let apod_id = match &comment.reference {
+            CommentReference::Apod(qid) => Some(qid.0)
         }.unwrap_or_default();
 
         let user_id = i32::from(comment.user_id.unwrap_or(UserId(0)));
 
         let res = sqlx::query(
             r#"
-            INSERT INTO comments (content, question_id, user_id)
+            INSERT INTO comments (content, apod_id, user_id)
             VALUES ($1, $2, $3)
             RETURNING *
             "#,
         )
         .bind(comment.content)
-        .bind(question_id)
+        .bind(apod_id)
         .bind(user_id)
         .fetch_one(&self.conn_pool)
         .await?;
@@ -283,56 +292,56 @@ SELECT title, img_date, content, url, id FROM questions WHERE id = $1
         Ok(comment)
     }
 
-    pub async fn get_all_question_pages(&self) -> Result<Vec<PagePackage>, AppError> {
-        let questions = sqlx::query("SELECT id from questions")
+    pub async fn get_all_apod_pages(&self) -> Result<Vec<PagePackage>, AppError> {
+        let apods = sqlx::query("SELECT id from apods")
             .fetch_all(&self.conn_pool)
             .await?;
 
         let mut res = Vec::new();
 
-        for row in questions {
-            let id = GetQuestionById {
-                question_id: row.get("id"),
+        for row in apods {
+            let id = GetApodById {
+                apod_id: row.get("id"),
             };
 
-            let page = self.get_page_for_question(id).await?;
+            let page = self.get_page_for_apod(id).await?;
             res.push(page)
         }
 
         Ok(res)
     }
 
-    pub async fn get_page_for_question(
+    pub async fn get_page_for_apod(
         &self,
-        question: GetQuestionById,
+        apod: GetApodById,
     ) -> Result<PagePackage, AppError> {
-        let question_row = sqlx::query("SELECT * FROM questions WHERE id = $1")
-            .bind(question.question_id)
+        let apod_row = sqlx::query("SELECT * FROM apods WHERE id = $1")
+            .bind(apod.apod_id)
             .fetch_one(&self.conn_pool)
             .await?;
 
-        let comments_rows = sqlx::query("SELECT * FROM comments WHERE question_id = $1")
-            .bind(question.question_id)
+        let comments_rows = sqlx::query("SELECT * FROM comments WHERE apod_id = $1")
+            .bind(apod.apod_id)
             .fetch_all(&self.conn_pool)
             .await?;
 
-        let question = Question {
-            id: QuestionId(question_row.get("id")),
-            title: question_row.get("title"),
-            img_date: question_row.get("img_date"),
-            content: question_row.get("content"),
-            url: question_row.get("url"),
+        let apod = Apod {
+            id: ApodId(apod_row.get("id")),
+            title: apod_row.get("title"),
+            img_date: apod_row.get("img_date"),
+            content: apod_row.get("content"),
+            url: apod_row.get("url"),
         };
 
-        let comments_for_question: Vec<Comment> = comments_rows
+        let comments_for_apod: Vec<Comment> = comments_rows
             .iter()
             .filter_map(|row| {
-                if let Ok(question_id) = row.try_get::<i32, _>("question_id") {
-                    if question_id == question.id.0 {
+                if let Ok(apod_id) = row.try_get::<i32, _>("apod_id") {
+                    if apod_id == apod.id.0 {
                         Some(Comment {
                             id: Some(CommentId(row.get("id"))),
                             content: row.get("content"),
-                            reference: CommentReference::Question(QuestionId(question_id)),
+                            reference: CommentReference::Apod(ApodId(apod_id)),
                             user_id: Some(UserId(row.get("user_id"))),
                         })
                     } else {
@@ -344,38 +353,38 @@ SELECT title, img_date, content, url, id FROM questions WHERE id = $1
             })
             .collect();
 
-        let question_with_comments = QuestionWithComments {
-            question,
-            comments: comments_for_question,
+        let apod_with_comments = ApodWithComments {
+            apod,
+            comments: comments_for_apod,
         };
 
         let package = PagePackage {
-            question: question_with_comments,
+            apod: apod_with_comments,
         };
 
         Ok(package)
     }
 
-    pub async fn get_all_apods(&mut self) -> Result<Vec<Apod>, AppError> {
-        let rows = sqlx::query!(r#"SELECT * FROM apods"#)
-            .fetch_all(&self.conn_pool)
-            .await?;
-
-        let apods: Vec<_> = rows
-            .into_iter()
-            .map(|row| {
-                Apod {
-                    id: row.id.into(), // Assuming you have a From<u32> for ApodId
-                    img_date: row.img_date,
-                    explanation: row.explanation,
-                    title: row.title,
-                    url: row.url,
-                }
-            })
-            .collect();
-
-        Ok(apods)
-    }
+    // pub async fn get_all_apods(&mut self) -> Result<Vec<Apod>, AppError> {
+    //     let rows = sqlx::query!(r#"SELECT * FROM apods"#)
+    //         .fetch_all(&self.conn_pool)
+    //         .await?;
+    //
+    //     let apods: Vec<_> = rows
+    //         .into_iter()
+    //         .map(|row| {
+    //             Apod {
+    //                 id: row.id.into(), // Assuming you have a From<u32> for ApodId
+    //                 img_date: row.img_date,
+    //                 explanation: row.explanation,
+    //                 title: row.title,
+    //                 url: row.url,
+    //             }
+    //         })
+    //         .collect();
+    //
+    //     Ok(apods)
+    // }
 }
 
 #[cfg(test)]
