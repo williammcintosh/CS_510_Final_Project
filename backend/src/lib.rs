@@ -18,9 +18,10 @@ use tower_http::services::ServeDir;
 use axum::body::{boxed, BoxBody};
 use axum::extract::Path;
 use axum::response::Response;
-use serde_json::{json, Value};
+use serde_json::{Value};
 use reqwest::Client;
 use std::env;
+use sqlx::PgPool;
 
 pub mod db;
 pub mod error;
@@ -36,11 +37,14 @@ pub async fn run_backend() {
 
     let addr = get_host_from_env();
 
-    let apods_json = get_nasa_apods().await;
+    let pool = new_pool().await;
 
+    let apods_json = get_nasa_apods().await;
     println!("{:?}", apods_json);
 
-    let app = main_routes::app(new_pool().await).await;
+    populate_database_from_nasa(&pool, apods_json.unwrap()).await;
+
+    let app = main_routes::app(pool).await;
 
     info!("Listening...");
 
@@ -68,11 +72,46 @@ pub async fn get_nasa_apods() -> Result<Value, anyhow::Error> {
         .await?;
     // Get the response from backend's data
     let body = res.text().await?;
-
     // Parse the response body into a JSON object
-    let json: Value = serde_json::from_str(&body)?;
+    let json_body: Value = serde_json::from_str(&body)?;
 
-    Ok(json)
+    Ok(json_body)
+}
+
+pub async fn populate_database_from_nasa(
+    pool: &PgPool,
+    body_json: Value,
+) -> anyhow::Result<()> {
+    for apod in body_json.as_array().unwrap() {
+        let date = apod["date"].as_str().unwrap();
+        let exists = sqlx::query!(
+            r#"
+            SELECT EXISTS(SELECT 1 FROM apods WHERE img_date = $1) AS "exists"
+            "#,
+            date
+        )
+            .fetch_one(pool)
+            .await?
+            .exists
+            .unwrap(); // Add .unwrap() to get the boolean value
+
+        if !exists {
+            sqlx::query!(
+                r#"
+                INSERT INTO "apods"(img_date, content, title, url)
+                VALUES ($1, $2, $3, $4)
+                "#,
+                apod["date"].as_str().unwrap(),
+                apod["explanation"].as_str().unwrap(),
+                apod["title"].as_str().unwrap(),
+                apod["url"].as_str().unwrap(),
+            )
+                .execute(pool)
+                .await?;
+        }
+    }
+
+    Ok(())
 }
 
 fn get_host_from_env() -> SocketAddr {
