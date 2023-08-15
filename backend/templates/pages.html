@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Favorite APODS</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../static/styles.css">
 </head>
 <body>
 <h1>Apods</h1>
@@ -14,7 +14,7 @@
     <h2>Apod: {{ package.apod.apod.title }}</h2>
     <p>Image Date: {{ package.apod.apod.img_date }}</p>
     <p>Content: {{ package.apod.apod.content }}</p>
-    <p>Url: {{ package.apod.apod.url }}</p>
+    <img src="{{ package.apod.apod.url }}" alt="Apod Image">
 
     <h3>Comments for apod:</h3>
     {% for comment in package.apod.comments %}

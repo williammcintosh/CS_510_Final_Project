@@ -40,7 +40,7 @@ pub async fn run_backend() {
     let pool = new_pool().await;
 
     let apods_json = get_nasa_apods().await;
-    println!("{:?}", apods_json);
+    // println!("{:?}", apods_json);
 
     populate_database_from_nasa(&pool, apods_json.unwrap()).await;
 

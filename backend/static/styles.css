@@ -37,3 +37,10 @@ h1 {
     padding: 5px;
     margin-top: 10px;
 }
+
+.package img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin-bottom: 10px;
+}
