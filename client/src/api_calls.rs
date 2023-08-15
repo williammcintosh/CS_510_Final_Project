@@ -1,13 +1,19 @@
 use dotenv::dotenv;
 use reqwest::Client;
 use std::env;
-use serde_json::json;
+use serde_json::{json, Value};
 
 // Gets the api port from the .env file
 fn get_api_port() -> Result<String, env::VarError> {
     dotenv().ok(); // Load the .env file
     let api_port = env::var("API_PORT")?; // Get the value of API_PORT from the .env file
     Ok(api_port)
+}
+
+fn get_nasa_api_key() -> Result<String, env::VarError> {
+    dotenv().ok(); // Load the .env file
+    let nasa_api_key = env::var("NASA_API_KEY")?;
+    Ok(nasa_api_key)
 }
 
 pub async fn get_all_apods() -> anyhow::Result<()> {
@@ -163,4 +169,23 @@ pub async fn post_new_favorite(
     println!("POST favorite: {}", body);
 
     Ok(())
+}
+
+pub async fn get_nasa_apods() -> Result<Value, anyhow::Error> {
+    let api_key = get_nasa_api_key()?;
+    // Create a reqwest client
+    let client = Client::new();
+    let url = format!("https://api.nasa.gov/planetary/apod?api_key={}", api_key) + "&start_date=2023-08-01";
+    // Make a GET HTTP request to our backend's /example route
+    let res = client
+        .get(url)
+        .send()
+        .await?;
+    // Get the response from backend's data
+    let body = res.text().await?;
+
+    // Parse the response body into a JSON object
+    let json: Value = serde_json::from_str(&body)?;
+
+    Ok(json)
 }
