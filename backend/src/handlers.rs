@@ -19,7 +19,7 @@ use crate::get_timestamp_after_8_hours;
 use crate::models::apod::{
     CreateApod, GetApodById, Apod, ApodId, UpdateApod,
 };
-use crate::models::user::{Claims, OptionalClaims, User, UserSignup, KEYS};
+use crate::models::user::{Claims, OptionalClaims, UserLogin, UserId, UserSignup, KEYS};
 use crate::models::comment::{
     Comment,
     // CommentReference
@@ -32,9 +32,10 @@ use crate::models::favorite::{
 };
 use crate::template::TEMPLATES;
 
+
 #[allow(dead_code)]
 pub async fn root(
-    State(am_database): State<Store>,
+    State(mut am_database): State<Store>,
     OptionalClaims(claims): OptionalClaims,
 ) -> Result<Html<String>, AppError> {
     let mut context = Context::new();
@@ -44,6 +45,11 @@ pub async fn root(
         error!("Setting claims and is_logged_in is TRUE now");
         context.insert("claims", &claims_data);
         context.insert("is_logged_in", &true);
+
+        // Get the favorite APODs for the logged-in user
+        let favorites = am_database.get_favorites_by_user_id(UserId(claims_data.id)).await?;
+        context.insert("favorites", &favorites);
+
         // Get all the page data
         let page_packages = am_database.get_all_apod_pages().await?;
         context.insert("page_packages", &page_packages);
@@ -159,7 +165,7 @@ pub async fn register(
     }
 
     // Check to see if there is already a user in the database with the given email address
-    let existing_user = database.get_user(&credentials.email).await;
+    let existing_user = database.get_user_login(&credentials.email).await;
 
     if let Ok(_) = existing_user {
         return Err(AppError::UserAlreadyExists);
@@ -189,13 +195,13 @@ pub async fn register(
 
 pub async fn login(
     State(database): State<Store>,
-    Form(creds): Form<User>,
+    Form(creds): Form<UserLogin>,
 ) -> Result<Response<Body>, AppError> {
     if creds.email.is_empty() || creds.password.is_empty() {
         return Err(AppError::MissingCredentials);
     }
 
-    let existing_user = database.get_user(&creds.email).await?;
+    let existing_user = database.get_user_login(&creds.email).await?;
 
     let is_password_correct =
         match argon2::verify_encoded(&*existing_user.password, creds.password.as_bytes()) {
@@ -212,10 +218,13 @@ pub async fn login(
     println!("User is authorized");
     // at this point we've authenticated the user's identity
     // create JWT to return
+    let user_details = database.get_user_details(&creds.email).await?;
+
     let claims = Claims {
-        id: 0,
+        id: user_details.id,
         email: creds.email.to_owned(),
         exp: get_timestamp_after_8_hours(),
+        is_admin: user_details.is_admin,
     };
 
     let token = jsonwebtoken::encode(&Header::default(), &claims, &KEYS.encoding)
@@ -252,4 +261,42 @@ pub async fn get_all_apods(
     let all_apods = am_database.get_all_apods().await?;
 
     Ok(Json(all_apods))
+}
+
+pub async fn profile(
+    State(mut am_database): State<Store>,
+    OptionalClaims(claims): OptionalClaims,
+) -> Result<Html<String>, AppError> {
+    let mut context = Context::new();
+    context.insert("name", "Casey");
+
+    let template_name = if let Some(claims_data) = claims {
+        error!("Setting claims and is_logged_in is TRUE now");
+        context.insert("claims", &claims_data);
+        context.insert("is_logged_in", &true);
+
+        // Check if the logged-in user is an admin
+        if claims_data.is_admin {
+            context.insert("is_admin", &true);
+        }
+
+        // Get the favorite APODs for the logged-in user
+        let favorites = am_database.get_favorites_by_user_id(UserId(claims_data.id)).await?;
+        context.insert("favorites", &favorites);
+
+        "profile.html" // Use the new template when logged in
+    } else {
+        // Handle the case where the user isn't logged in
+        error!("is_logged_in is FALSE now");
+        context.insert("is_logged_in", &false);
+        "index.html" // Use the original template when not logged in
+    };
+
+    let rendered = TEMPLATES
+        .render(template_name, &context)
+        .unwrap_or_else(|err| {
+            error!("Template rendering error: {}", err);
+            panic!()
+        });
+    Ok(Html(rendered))
 }

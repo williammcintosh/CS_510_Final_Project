@@ -17,9 +17,17 @@ use serde_derive::{Deserialize, Serialize};
 // use sqlx::decode;
 
 #[derive(Serialize, Deserialize, sqlx::FromRow)]
-pub struct User {
+pub struct UserLogin {
     pub email: String,
     pub password: String,
+}
+
+#[derive(Serialize, Deserialize, sqlx::FromRow)]
+pub struct UserDetails {
+    pub id: i32,
+    pub email: String,
+    pub is_admin: bool,
+    pub is_banned: bool,
 }
 
 make_db_id!(UserId);
@@ -35,12 +43,13 @@ pub struct UserSignup {
 //     pub token: Claims,
 // }
 
-#[derive(Serialize, Deserialize, derive_more::Display)]
-#[display(fmt = "id: {}, email: {}, exp: {}", id, email, exp)]
+# [derive(Serialize, Deserialize, derive_more::Display)]
+# [display(fmt = "id: {}, email: {}, exp: {}, is_admin: {}", id, email, exp, is_admin)]
 pub struct Claims {
     pub id: i32,
     pub email: String,
     pub exp: u64,
+    pub is_admin: bool,
 }
 
 #[async_trait]

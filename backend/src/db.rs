@@ -25,7 +25,7 @@ use crate::models::favorite::{
     Favorite,
     FavoriteId,
 };
-use crate::models::user::{User, UserId, UserSignup};
+use crate::models::user::{UserLogin, UserDetails, UserId, UserSignup};
 
 #[derive(Clone)]
 pub struct Store {
@@ -229,8 +229,21 @@ SELECT title, img_date, content, url, id FROM apods WHERE id = $1
         Ok(())
     }
 
-    pub async fn get_user(&self, email: &str) -> Result<User, AppError> {
-        let user = sqlx::query_as::<_, User>(
+    pub async fn get_user_details(&self, email: &str) -> Result<UserDetails, AppError> {
+        let user = sqlx::query_as::<_, UserDetails>(
+            r#"
+                SELECT id, email, is_admin, is_banned FROM users WHERE email = $1
+            "#,
+        )
+            .bind(email)
+            .fetch_one(&self.conn_pool)
+            .await?;
+
+        Ok(user)
+    }
+
+    pub async fn get_user_login(&self, email: &str) -> Result<UserLogin, AppError> {
+        let user = sqlx::query_as::<_, UserLogin>(
             r#"
                 SELECT email, password FROM users WHERE email = $1
             "#,
@@ -361,6 +374,37 @@ SELECT title, img_date, content, url, id FROM apods WHERE id = $1
         };
 
         Ok(package)
+    }
+
+    pub async fn get_favorites_by_user_id(
+        &mut self,
+        user_id: UserId,
+    ) -> Result<Vec<Apod>, AppError> {
+        let rows = sqlx::query!(
+        r#"
+        SELECT apods.* FROM apods
+        INNER JOIN favorites ON apods.id = favorites.apod_id
+        WHERE favorites.user_id = $1
+        "#,
+        user_id.0,
+    )
+            .fetch_all(&self.conn_pool)
+            .await?;
+
+        let apods: Vec<_> = rows
+            .into_iter()
+            .map(|row| {
+                Apod {
+                    id: row.id.into(),
+                    title: row.title,
+                    img_date: row.img_date,
+                    content: row.content,
+                    url: row.url,
+                }
+            })
+            .collect();
+
+        Ok(apods)
     }
 
     // pub async fn seed_apod_table_with_nasa(

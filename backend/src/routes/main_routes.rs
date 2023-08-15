@@ -7,6 +7,7 @@ use sqlx::PgPool;
 
 use crate::db::Store;
 use crate::handlers::root;
+// use crate::handlers::profile;
 use crate::{file_handler, handlers, layers};
 
 pub async fn app(pool: PgPool) -> Router {
@@ -22,6 +23,8 @@ pub async fn app(pool: PgPool) -> Router {
         // The router matches these FROM TOP TO BOTTOM explicitly!
         .nest("/static", static_router)
         .route("/", get(root))
+        .route("/profile", get(handlers::profile))
+
 
         .route("/apods", get(handlers::get_apods))
         .route("/apod/:apod_id", get(handlers::get_apod_by_id))
