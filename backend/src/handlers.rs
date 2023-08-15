@@ -19,7 +19,7 @@ use crate::get_timestamp_after_8_hours;
 use crate::models::apod::{
     CreateApod, GetApodById, Apod, ApodId, UpdateApod,
 };
-use crate::models::user::{Claims, OptionalClaims, User, UserId, UserSignup, KEYS};
+use crate::models::user::{Claims, OptionalClaims, UserLogin, UserId, UserSignup, KEYS};
 use crate::models::comment::{
     Comment,
     // CommentReference
@@ -165,7 +165,7 @@ pub async fn register(
     }
 
     // Check to see if there is already a user in the database with the given email address
-    let existing_user = database.get_user(&credentials.email).await;
+    let existing_user = database.get_user_login(&credentials.email).await;
 
     if let Ok(_) = existing_user {
         return Err(AppError::UserAlreadyExists);
@@ -195,13 +195,13 @@ pub async fn register(
 
 pub async fn login(
     State(database): State<Store>,
-    Form(creds): Form<User>,
+    Form(creds): Form<UserLogin>,
 ) -> Result<Response<Body>, AppError> {
     if creds.email.is_empty() || creds.password.is_empty() {
         return Err(AppError::MissingCredentials);
     }
 
-    let existing_user = database.get_user(&creds.email).await?;
+    let existing_user = database.get_user_login(&creds.email).await?;
 
     let is_password_correct =
         match argon2::verify_encoded(&*existing_user.password, creds.password.as_bytes()) {
@@ -218,8 +218,10 @@ pub async fn login(
     println!("User is authorized");
     // at this point we've authenticated the user's identity
     // create JWT to return
+    let user_details = database.get_user_details(&creds.email).await?;
+
     let claims = Claims {
-        id: 0,
+        id: user_details.id,
         email: creds.email.to_owned(),
         exp: get_timestamp_after_8_hours(),
     };

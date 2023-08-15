@@ -25,7 +25,7 @@ use crate::models::favorite::{
     Favorite,
     FavoriteId,
 };
-use crate::models::user::{User, UserId, UserSignup};
+use crate::models::user::{UserLogin, UserDetails, UserId, UserSignup};
 
 #[derive(Clone)]
 pub struct Store {
@@ -229,8 +229,21 @@ SELECT title, img_date, content, url, id FROM apods WHERE id = $1
         Ok(())
     }
 
-    pub async fn get_user(&self, email: &str) -> Result<User, AppError> {
-        let user = sqlx::query_as::<_, User>(
+    pub async fn get_user_details(&self, email: &str) -> Result<UserDetails, AppError> {
+        let user = sqlx::query_as::<_, UserDetails>(
+            r#"
+                SELECT id, email, is_admin, is_banned FROM users WHERE email = $1
+            "#,
+        )
+            .bind(email)
+            .fetch_one(&self.conn_pool)
+            .await?;
+
+        Ok(user)
+    }
+
+    pub async fn get_user_login(&self, email: &str) -> Result<UserLogin, AppError> {
+        let user = sqlx::query_as::<_, UserLogin>(
             r#"
                 SELECT email, password FROM users WHERE email = $1
             "#,
