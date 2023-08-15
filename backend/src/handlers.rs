@@ -32,6 +32,7 @@ use crate::models::favorite::{
 };
 use crate::template::TEMPLATES;
 
+
 #[allow(dead_code)]
 pub async fn root(
     State(am_database): State<Store>,
@@ -252,4 +253,8 @@ pub async fn get_all_apods(
     let all_apods = am_database.get_all_apods().await?;
 
     Ok(Json(all_apods))
+}
+
+pub async fn profile() -> Result<Html<&'static str>, AppError> {
+    Ok(Html(include_str!("../templates/profile.html")))
 }
