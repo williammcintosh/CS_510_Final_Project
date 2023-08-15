@@ -27,9 +27,9 @@ async fn main() -> anyhow::Result<()> {
     // api_calls::post_new_favorite(2, 2).await?;
 
     // Call get_nasa_apods to get the JSON data
-    let json_body: Value = api_calls::get_nasa_apods().await?;
-
-    println!("{:?}", json_body);
+    // let json_body: Value = api_calls::get_nasa_apods().await?;
+    //
+    // println!("{:?}", json_body);
 
     // Call seed_apod_table_with_nasa and pass the JSON data
     // let _ = handlers::pass_nasa_info_to_db(json_body).await.unwrap();

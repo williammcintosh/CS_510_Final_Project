@@ -171,21 +171,21 @@ pub async fn post_new_favorite(
     Ok(())
 }
 
-pub async fn get_nasa_apods() -> Result<Value, anyhow::Error> {
-    let api_key = get_nasa_api_key()?;
-    // Create a reqwest client
-    let client = Client::new();
-    let url = format!("https://api.nasa.gov/planetary/apod?api_key={}", api_key) + "&start_date=2023-08-01";
-    // Make a GET HTTP request to our backend's /example route
-    let res = client
-        .get(url)
-        .send()
-        .await?;
-    // Get the response from backend's data
-    let body = res.text().await?;
-
-    // Parse the response body into a JSON object
-    let json: Value = serde_json::from_str(&body)?;
-
-    Ok(json)
-}
+// pub async fn get_nasa_apods() -> Result<Value, anyhow::Error> {
+//     let api_key = get_nasa_api_key()?;
+//     // Create a reqwest client
+//     let client = Client::new();
+//     let url = format!("https://api.nasa.gov/planetary/apod?api_key={}", api_key) + "&start_date=2023-08-01";
+//     // Make a GET HTTP request to our backend's /example route
+//     let res = client
+//         .get(url)
+//         .send()
+//         .await?;
+//     // Get the response from backend's data
+//     let body = res.text().await?;
+//
+//     // Parse the response body into a JSON object
+//     let json: Value = serde_json::from_str(&body)?;
+//
+//     Ok(json)
+// }
