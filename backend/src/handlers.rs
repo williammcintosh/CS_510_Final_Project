@@ -224,6 +224,7 @@ pub async fn login(
         id: user_details.id,
         email: creds.email.to_owned(),
         exp: get_timestamp_after_8_hours(),
+        is_admin: user_details.is_admin,
     };
 
     let token = jsonwebtoken::encode(&Header::default(), &claims, &KEYS.encoding)
@@ -273,6 +274,11 @@ pub async fn profile(
         error!("Setting claims and is_logged_in is TRUE now");
         context.insert("claims", &claims_data);
         context.insert("is_logged_in", &true);
+
+        // Check if the logged-in user is an admin
+        if claims_data.is_admin {
+            context.insert("is_admin", &true);
+        }
 
         // Get the favorite APODs for the logged-in user
         let favorites = am_database.get_favorites_by_user_id(UserId(claims_data.id)).await?;

@@ -43,12 +43,13 @@ pub struct UserSignup {
 //     pub token: Claims,
 // }
 
-#[derive(Serialize, Deserialize, derive_more::Display)]
-#[display(fmt = "id: {}, email: {}, exp: {}", id, email, exp)]
+# [derive(Serialize, Deserialize, derive_more::Display)]
+# [display(fmt = "id: {}, email: {}, exp: {}, is_admin: {}", id, email, exp, is_admin)]
 pub struct Claims {
     pub id: i32,
     pub email: String,
     pub exp: u64,
+    pub is_admin: bool,
 }
 
 #[async_trait]
