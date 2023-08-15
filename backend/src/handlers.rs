@@ -93,6 +93,16 @@ pub async fn create_apod(
     Ok(Json(apod))
 }
 
+// pub async fn pass_nasa_info_to_db(
+//     State(mut am_database): axum::extract::State<crate::db::Store>,
+//     json_body: Value,
+// ) -> Result<Json<Vec<Apod>>, AppError> {
+//     let apods = am_database
+//         .seed_apod_table_with_nasa(json_body)
+//         .await?;
+//     Ok(Json(apods))
+// }
+
 pub async fn post_comment(
     State(am_database): State<Store>,
     Json(comment): Json<Comment>,

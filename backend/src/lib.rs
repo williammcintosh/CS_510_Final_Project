@@ -10,6 +10,18 @@ use dotenvy::dotenv;
 use tracing::info;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
+use http::{Request, StatusCode, Uri};
+use hyper::Body;
+use tower::ServiceExt;
+use tower_http::services::ServeDir;
+
+use axum::body::{boxed, BoxBody};
+use axum::extract::Path;
+use axum::response::Response;
+use serde_json::{Value};
+use reqwest::Client;
+use std::env;
+use sqlx::PgPool;
 
 pub mod db;
 pub mod error;
@@ -25,7 +37,14 @@ pub async fn run_backend() {
 
     let addr = get_host_from_env();
 
-    let app = main_routes::app(new_pool().await).await;
+    let pool = new_pool().await;
+
+    let apods_json = get_nasa_apods().await;
+    println!("{:?}", apods_json);
+
+    populate_database_from_nasa(&pool, apods_json.unwrap()).await;
+
+    let app = main_routes::app(pool).await;
 
     info!("Listening...");
 
@@ -33,6 +52,66 @@ pub async fn run_backend() {
         .serve(app.into_make_service())
         .await
         .unwrap();
+}
+
+fn get_nasa_api_key() -> Result<String, env::VarError> {
+    dotenv().ok(); // Load the .env file
+    let nasa_api_key = env::var("NASA_API_KEY")?;
+    Ok(nasa_api_key)
+}
+
+pub async fn get_nasa_apods() -> Result<Value, anyhow::Error> {
+    let api_key = get_nasa_api_key()?;
+    // Create a reqwest client
+    let client = Client::new();
+    let url = format!("https://api.nasa.gov/planetary/apod?api_key={}", api_key) + "&start_date=2023-08-01";
+    // Make a GET HTTP request to our backend's /example route
+    let res = client
+        .get(url)
+        .send()
+        .await?;
+    // Get the response from backend's data
+    let body = res.text().await?;
+    // Parse the response body into a JSON object
+    let json_body: Value = serde_json::from_str(&body)?;
+
+    Ok(json_body)
+}
+
+pub async fn populate_database_from_nasa(
+    pool: &PgPool,
+    body_json: Value,
+) -> anyhow::Result<()> {
+    for apod in body_json.as_array().unwrap() {
+        let date = apod["date"].as_str().unwrap();
+        let exists = sqlx::query!(
+            r#"
+            SELECT EXISTS(SELECT 1 FROM apods WHERE img_date = $1) AS "exists"
+            "#,
+            date
+        )
+            .fetch_one(pool)
+            .await?
+            .exists
+            .unwrap(); // Add .unwrap() to get the boolean value
+
+        if !exists {
+            sqlx::query!(
+                r#"
+                INSERT INTO "apods"(img_date, content, title, url)
+                VALUES ($1, $2, $3, $4)
+                "#,
+                apod["date"].as_str().unwrap(),
+                apod["explanation"].as_str().unwrap(),
+                apod["title"].as_str().unwrap(),
+                apod["url"].as_str().unwrap(),
+            )
+                .execute(pool)
+                .await?;
+        }
+    }
+
+    Ok(())
 }
 
 fn get_host_from_env() -> SocketAddr {
@@ -69,6 +148,38 @@ pub fn get_timestamp_after_8_hours() -> u64 {
     let eight_hours_from_now = since_epoch + Duration::from_secs(60 * 60 * 8);
     eight_hours_from_now.as_secs()
 }
+
+// https://benw.is/posts/serving-static-files-with-axum
+pub async fn get_static_file(uri: Uri) -> Result<Response<BoxBody>, (StatusCode, String)> {
+    let req = Request::builder().uri(uri).body(Body::empty()).unwrap();
+
+    // `ServeDir` implements `tower::Service` so we can call it with `tower::ServiceExt::oneshot`
+    // When run normally, the root is the workspace root (backend for us if we're running from backend)
+    match ServeDir::new("./static").oneshot(req).await {
+        Ok(res) => Ok(res.map(boxed)),
+        Err(err) => Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Something went wrong: {}", err),
+        )),
+    }
+}
+
+pub async fn file_handler(
+    Path(filename): Path<String>,
+) -> Result<Response<BoxBody>, (StatusCode, String)> {
+    let uri: Uri = format!("/{}", filename).parse().unwrap(); // Construct the URI from the filename
+    let res = get_static_file(uri.clone()).await?;
+
+    if res.status() == StatusCode::NOT_FOUND {
+        match format!("{}.html", uri).parse() {
+            Ok(uri_html) => get_static_file(uri_html).await,
+            Err(_) => Err((StatusCode::INTERNAL_SERVER_ERROR, "Invalid URI".to_string())),
+        }
+    } else {
+        Ok(res)
+    }
+}
+
 
 pub type AppResult<T> = Result<T, AppError>;
 
