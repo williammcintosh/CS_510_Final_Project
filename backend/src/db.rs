@@ -1,15 +1,13 @@
 use axum::Json;
-use serde_json::Value;
+use serde_json::{Value};
 use std::sync::{
     Arc,
     Mutex,
     // RwLock
 };
-
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{PgPool, Row};
 use tracing::info;
-
 use crate::error::AppError;
 use crate::models::comment::{
     Comment,
@@ -22,7 +20,7 @@ use crate::models::apod::{
     GetApodById, IntoApodId, Apod, ApodId, UpdateApod,
 };
 use crate::models::favorite::{
-    GetFavoriteById,
+    // GetFavoriteById,
     // IntoFavoriteId,
     Favorite,
     FavoriteId,
@@ -364,6 +362,39 @@ SELECT title, img_date, content, url, id FROM apods WHERE id = $1
 
         Ok(package)
     }
+
+    // pub async fn seed_apod_table_with_nasa(
+    //     &mut self,
+    //     body_json: String
+    // ) -> Result<Vec<Apod>, AppError> {
+    //
+    //     let rows = sqlx::query(
+    //         r#"
+    //             INSERT INTO "apods"(img_date, content, title, url)
+    //             SELECT to_timestamp(apod->>'date', 'YYYY-MM-DD'), apod->>'explanation', apod->>'title', apod->>'url'
+    //             FROM json_array_elements(' $1 ') AS apod
+    //         "#,
+    //     )
+    //         .bind(body_json)
+    //         .fetch_all(&self.conn_pool)
+    //         .await?;
+    //
+    //     let apods: Vec<_> = rows
+    //         .into_iter()
+    //         .map(|row| {
+    //             Apod {
+    //                 id: row.id.into(), // Assuming you have a From<u32> for ApodId
+    //                 title: row.title,
+    //                 img_date: row.img_date,
+    //                 content: row.content,
+    //                 url: row.url,
+    //             }
+    //         })
+    //         .collect();
+    //
+    //     Ok(apods)
+    // }
+
 
     // pub async fn get_all_apods(&mut self) -> Result<Vec<Apod>, AppError> {
     //     let rows = sqlx::query!(r#"SELECT * FROM apods"#)

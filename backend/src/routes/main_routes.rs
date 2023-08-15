@@ -7,15 +7,20 @@ use sqlx::PgPool;
 
 use crate::db::Store;
 use crate::handlers::root;
-use crate::{handlers, layers};
+use crate::{file_handler, handlers, layers};
 
 pub async fn app(pool: PgPool) -> Router {
     let db = Store::with_pool(pool);
 
     let (cors_layer, trace_layer) = layers::get_layers();
 
+    let static_router = Router::new()
+        .route("/:filename", get(file_handler))
+        .with_state(db.clone());
+
     Router::new()
         // The router matches these FROM TOP TO BOTTOM explicitly!
+        .nest("/static", static_router)
         .route("/", get(root))
 
         .route("/apods", get(handlers::get_apods))
