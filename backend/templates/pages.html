@@ -5,8 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Favorite APODS</title>
     <link rel="stylesheet" href="../static/styles.css">
+    <style>
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #f1f1f1;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .header button {
+            margin-right: 10px;
+        }
+    </style>
 </head>
 <body>
+<div class="header">
+    <button>Main Page</button>
+    <h1>Apods</h1>
+    <button>My Profile</button>
+</div>
+
 <h1>Apods</h1>
 
 {% for package in page_packages %}

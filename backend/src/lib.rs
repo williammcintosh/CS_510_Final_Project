@@ -42,7 +42,7 @@ pub async fn run_backend() {
     let apods_json = get_nasa_apods().await;
     // println!("{:?}", apods_json);
 
-    populate_database_from_nasa(&pool, apods_json.unwrap()).await;
+    let _ = populate_database_from_nasa(&pool, apods_json.unwrap()).await;
 
     let app = main_routes::app(pool).await;
 
