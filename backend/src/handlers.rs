@@ -19,7 +19,7 @@ use crate::get_timestamp_after_8_hours;
 use crate::models::apod::{
     CreateApod, GetApodById, Apod, ApodId, UpdateApod,
 };
-use crate::models::user::{Claims, OptionalClaims, User, UserSignup, KEYS};
+use crate::models::user::{Claims, OptionalClaims, User, UserId, UserSignup, KEYS};
 use crate::models::comment::{
     Comment,
     // CommentReference
@@ -35,7 +35,7 @@ use crate::template::TEMPLATES;
 
 #[allow(dead_code)]
 pub async fn root(
-    State(am_database): State<Store>,
+    State(mut am_database): State<Store>,
     OptionalClaims(claims): OptionalClaims,
 ) -> Result<Html<String>, AppError> {
     let mut context = Context::new();
@@ -45,6 +45,11 @@ pub async fn root(
         error!("Setting claims and is_logged_in is TRUE now");
         context.insert("claims", &claims_data);
         context.insert("is_logged_in", &true);
+
+        // Get the favorite APODs for the logged-in user
+        let favorites = am_database.get_favorites_by_user_id(UserId(claims_data.id)).await?;
+        context.insert("favorites", &favorites);
+
         // Get all the page data
         let page_packages = am_database.get_all_apod_pages().await?;
         context.insert("page_packages", &page_packages);
@@ -255,6 +260,35 @@ pub async fn get_all_apods(
     Ok(Json(all_apods))
 }
 
-pub async fn profile() -> Result<Html<&'static str>, AppError> {
-    Ok(Html(include_str!("../templates/profile.html")))
+pub async fn profile(
+    State(mut am_database): State<Store>,
+    OptionalClaims(claims): OptionalClaims,
+) -> Result<Html<String>, AppError> {
+    let mut context = Context::new();
+    context.insert("name", "Casey");
+
+    let template_name = if let Some(claims_data) = claims {
+        error!("Setting claims and is_logged_in is TRUE now");
+        context.insert("claims", &claims_data);
+        context.insert("is_logged_in", &true);
+
+        // Get the favorite APODs for the logged-in user
+        let favorites = am_database.get_favorites_by_user_id(UserId(claims_data.id)).await?;
+        context.insert("favorites", &favorites);
+
+        "profile.html" // Use the new template when logged in
+    } else {
+        // Handle the case where the user isn't logged in
+        error!("is_logged_in is FALSE now");
+        context.insert("is_logged_in", &false);
+        "index.html" // Use the original template when not logged in
+    };
+
+    let rendered = TEMPLATES
+        .render(template_name, &context)
+        .unwrap_or_else(|err| {
+            error!("Template rendering error: {}", err);
+            panic!()
+        });
+    Ok(Html(rendered))
 }

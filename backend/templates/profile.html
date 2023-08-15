@@ -31,5 +31,16 @@
 
 <h1>Welcome to your profile!</h1>
 
+<h2>Profile Details</h2>
+<p>User ID: {{ claims.id }}</p>
+<p>Email: {{ claims.email }}</p>
+
+<h3>Your Favorite APODs:</h3>
+<ul>
+    {% for favorite in favorites %}
+    <li>{{ favorite.title }}</li>
+    {% endfor %}
+</ul>
+
 </body>
 </html>

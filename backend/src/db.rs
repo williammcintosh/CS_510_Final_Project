@@ -363,6 +363,37 @@ SELECT title, img_date, content, url, id FROM apods WHERE id = $1
         Ok(package)
     }
 
+    pub async fn get_favorites_by_user_id(
+        &mut self,
+        user_id: UserId,
+    ) -> Result<Vec<Apod>, AppError> {
+        let rows = sqlx::query!(
+        r#"
+        SELECT apods.* FROM apods
+        INNER JOIN favorites ON apods.id = favorites.apod_id
+        WHERE favorites.user_id = $1
+        "#,
+        user_id.0,
+    )
+            .fetch_all(&self.conn_pool)
+            .await?;
+
+        let apods: Vec<_> = rows
+            .into_iter()
+            .map(|row| {
+                Apod {
+                    id: row.id.into(),
+                    title: row.title,
+                    img_date: row.img_date,
+                    content: row.content,
+                    url: row.url,
+                }
+            })
+            .collect();
+
+        Ok(apods)
+    }
+
     // pub async fn seed_apod_table_with_nasa(
     //     &mut self,
     //     body_json: String
