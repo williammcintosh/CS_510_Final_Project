@@ -80,3 +80,13 @@ h1 {
     padding: 10px;
     margin-bottom: 20px;
 }
+
+.img-half-size {
+    width: 50%;
+    height: 50%;
+}
+
+.img-quarter-size {
+    width: 15%;
+    height: 15%;
+}

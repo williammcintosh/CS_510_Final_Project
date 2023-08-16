@@ -43,6 +43,7 @@
 <ul>
     {% for favorite in favorites %}
     <li>{{ favorite.title }}</li>
+    <img src="{{ favorite.url }}" alt="Fav Apod Image" class="img-quarter-size">
     {% endfor %}
 </ul>
 
