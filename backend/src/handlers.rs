@@ -283,14 +283,14 @@ pub async fn profile(
             // Get the favorite APODs for the logged-in user
             let all_users = am_database.get_all_users().await?;
             context.insert("all_users", &all_users);
+        } else {
+            context.insert("is_admin", &false);
+            error!("is_admin is FALSE");
         }
-        error!("is_admin is FALSE");
 
         // Get the favorite APODs for the logged-in user
         let favorites = am_database.get_favorites_by_user_id(UserId(claims_data.id)).await?;
         context.insert("favorites", &favorites);
-
-        error!("Received user's favorite APODs");
 
         "profile.html" // Use the new template when logged in
     } else {
@@ -326,7 +326,57 @@ pub async fn ban_user(
         // Check if the logged-in user is an admin
         if claims_data.is_admin {
             context.insert("is_admin", &true);
-            context.insert("banned_user_id", &query);
+
+            // Perform the banning, update db
+            let banned_user = am_database.perform_user_ban(query).await?;
+            context.insert("banned_user_id", &banned_user.id);
+            context.insert("user_is_banned", &true);
+            error!("User Banned is now: {}", &true)
+        } else {
+            context.insert("is_admin", &true);
+        }
+
+        "ban_user.html" // Use the new template when logged in
+    } else {
+        // Handle the case where the user isn't logged in
+        error!("is_logged_in is FALSE now");
+        context.insert("is_logged_in", &false);
+        "index.html" // Use the original template when not logged in
+    };
+
+    let rendered = TEMPLATES
+        .render(template_name, &context)
+        .unwrap_or_else(|err| {
+            error!("Template rendering error: {}", err);
+            panic!()
+        });
+    Ok(Html(rendered))
+}
+
+pub async fn un_ban_user(
+    State(mut am_database): State<Store>,
+    Path(query): Path<i32>, // localhost:3000/ban_user/2
+    OptionalClaims(claims): OptionalClaims,
+) -> Result<Html<String>, AppError> {
+    let mut context = Context::new();
+    context.insert("name", "Casey");
+
+    let template_name = if let Some(claims_data) = claims {
+        error!("Setting claims and is_logged_in is TRUE now");
+        context.insert("claims", &claims_data);
+        context.insert("is_logged_in", &true);
+
+        // Check if the logged-in user is an admin
+        if claims_data.is_admin {
+            context.insert("is_admin", &true);
+
+            // Perform the banning, update db
+            let banned_user = am_database.perform_user_un_ban(query).await?;
+            context.insert("banned_user_id", &banned_user.id);
+            context.insert("user_is_banned", &false);
+            error!("User Banned is now: {}", &false)
+        } else {
+            context.insert("is_admin", &true);
         }
 
         "ban_user.html" // Use the new template when logged in

@@ -427,6 +427,76 @@ SELECT title, img_date, content, url, id FROM apods WHERE id = $1
         Ok(apods)
     }
 
+    pub async fn perform_user_ban(
+        &mut self,
+        user_id: i32,
+    ) -> Result<UserDetails, AppError> {
+        sqlx::query!(
+            r#"
+                UPDATE users
+                SET is_banned = true
+                WHERE id = $1
+            "#,
+            user_id,
+        )
+            .execute(&self.conn_pool)
+            .await?;
+
+        let row = sqlx::query!(
+            r#"
+                SELECT * FROM users WHERE id = $1
+            "#,
+            user_id,
+        )
+            .fetch_one(&self.conn_pool)
+            .await?;
+
+        let banned_user = UserDetails {
+            id: row.id,
+            email: row.email,
+            is_admin: row.is_admin.is_some(),
+            is_banned: row.is_banned.is_some(),
+        };
+
+        Ok(banned_user)
+    }
+
+    pub async fn perform_user_un_ban(
+        &mut self,
+        user_id: i32,
+    ) -> Result<UserDetails, AppError> {
+        sqlx::query!(
+            r#"
+                UPDATE users
+                SET is_banned = false
+                WHERE id = $1
+            "#,
+            user_id,
+        )
+            .execute(&self.conn_pool)
+            .await?;
+
+        let row = sqlx::query!(
+            r#"
+                SELECT * FROM users WHERE id = $1
+            "#,
+            user_id,
+        )
+            .fetch_one(&self.conn_pool)
+            .await?;
+
+        let banned_user = UserDetails {
+            id: row.id,
+            email: row.email,
+            is_admin: row.is_admin.is_some(),
+            is_banned: row.is_banned.is_some(),
+        };
+
+        Ok(banned_user)
+    }
+
+
+
     // pub async fn seed_apod_table_with_nasa(
     //     &mut self,
     //     body_json: String
