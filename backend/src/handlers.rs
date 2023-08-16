@@ -31,11 +31,12 @@ use crate::models::favorite::{
     // FavoriteId,
 };
 use crate::template::TEMPLATES;
+use std::collections::HashMap;
 
 
 #[allow(dead_code)]
 pub async fn root(
-    State(am_database): State<Store>,
+    State(mut am_database): State<Store>,
     OptionalClaims(claims): OptionalClaims,
 ) -> Result<Html<String>, AppError> {
     let mut context = Context::new();
@@ -46,13 +47,22 @@ pub async fn root(
         context.insert("claims", &claims_data);
         context.insert("is_logged_in", &true);
 
-        // // Get the favorite APODs for the logged-in user
-        // let favorites = am_database.get_favorites_by_user_id(UserId(claims_data.id)).await?;
-        // context.insert("favorites", &favorites);
+        // Get the favorite APODs for the logged-in user
+        let favorites = am_database.get_favorites_by_user_id(UserId(claims_data.id)).await?;
+        let all_apods = am_database.get_all_apod_pages().await?;
+        context.insert("all_apods", &all_apods);
 
-        // Get all the page data
-        let page_packages = am_database.get_all_apod_pages().await?;
-        context.insert("page_packages", &page_packages);
+        let mut apod_map: HashMap<i32, bool> = HashMap::new();
+
+        // Iterate through each apod and check if it is favorited
+        for apod in all_apods.iter() {
+            let is_favorited = favorites.iter().any(|favorite| favorite.id == apod.apod.apod.id);
+            apod_map.insert(apod.apod.apod.id.0, is_favorited);
+        }
+
+        // Insert the hashmap into the context
+        context.insert("apod_map", &apod_map);
+        context.insert("all_apods", &all_apods);
 
         "pages.html" // Use the new template when logged in
     } else {
@@ -130,6 +140,47 @@ pub async fn post_favorite(
         .await?;
 
     Ok(Json(favorite))
+}
+
+pub async fn set_favorite_url(
+    State(mut am_database): State<Store>,
+    Path(apod_id): Path<i32>, // localhost:3000/favorite/2
+    OptionalClaims(claims): OptionalClaims,
+) -> Result<Html<String>, AppError> {
+    let mut context = Context::new();
+    context.insert("name", "Casey");
+
+    let template_name = if let Some(claims_data) = claims {
+        context.insert("claims", &claims_data);
+        context.insert("is_logged_in", &true);
+
+        // Perform the favoriting, update db
+        let a_id = Some(ApodId(apod_id));
+        let u_id = Some(UserId(claims_data.id));
+        let _ = am_database.add_favorite(a_id, u_id).await?;
+        let fav_apod = am_database.get_apod_by_id(ApodId(apod_id)).await?;
+
+        error!("Marked as favorite: {}", &apod_id);
+
+        //Get apod title and set it to the context
+        context.insert("new_fav_title", &fav_apod.title);
+        context.insert("new_fav_url", &fav_apod.url);
+
+        "favorite_set.html" // Use the new template when logged in
+    } else {
+        // Handle the case where the user isn't logged in
+        error!("is_logged_in is FALSE now");
+        context.insert("is_logged_in", &false);
+        "index.html" // Use the original template when not logged in
+    };
+
+    let rendered = TEMPLATES
+        .render(template_name, &context)
+        .unwrap_or_else(|err| {
+            error!("Template rendering error: {}", err);
+            panic!()
+        });
+    Ok(Html(rendered))
 }
 
 

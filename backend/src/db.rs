@@ -150,17 +150,19 @@ SELECT * FROM apods
         user_id: Option<UserId>,
     ) -> Result<Favorite, AppError> {
 
-        let q_id = i32::from(apod_id.unwrap_or(ApodId(0)));
+        let a_id = i32::from(apod_id.unwrap_or(ApodId(0)));
         let u_id = i32::from(user_id.unwrap_or(UserId(0)));
 
+        //On constraint violation, updates existing entry instead of creating a new one.
         let res = sqlx::query(
-            r#"
+                r#"
                 INSERT INTO "favorites"(apod_id, user_id)
                 VALUES ($1, $2)
+                ON CONFLICT (apod_id, user_id) DO UPDATE SET apod_id = $1, user_id = $2
                 RETURNING *
             "#
         )
-        .bind(q_id)
+        .bind(a_id)
         .bind(u_id)
         .fetch_one(&self.conn_pool)
         .await?;

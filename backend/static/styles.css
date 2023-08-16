@@ -8,7 +8,7 @@ h1 {
     text-align: center;
 }
 
-.package {
+.an_apod {
     background-color: #f5f5f5;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -16,21 +16,21 @@ h1 {
     margin-bottom: 20px;
 }
 
-.package h2 {
+.an_apod h2 {
     font-size: 18px;
     margin-bottom: 10px;
 }
 
-.package p {
+.an_apod p {
     margin-bottom: 5px;
 }
 
-.package h3 {
+.an_apod h3 {
     font-size: 16px;
     margin-bottom: 10px;
 }
 
-.package .comment {
+.an_apod .comment {
     background-color: #eaeaea;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -38,7 +38,7 @@ h1 {
     margin-top: 10px;
 }
 
-.package img {
+.an_apod img {
     max-width: 100%;
     height: auto;
     display: block;
