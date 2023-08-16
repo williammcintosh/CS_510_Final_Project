@@ -304,3 +304,39 @@ pub async fn profile(
         });
     Ok(Html(rendered))
 }
+
+pub async fn ban_user(
+    State(mut am_database): State<Store>,
+    // Path(query): Path<i32>, // localhost:3000/ban_user/2
+    OptionalClaims(claims): OptionalClaims,
+) -> Result<Html<String>, AppError> {
+    let mut context = Context::new();
+    context.insert("name", "Casey");
+
+    let template_name = if let Some(claims_data) = claims {
+        error!("Setting claims and is_logged_in is TRUE now");
+        context.insert("claims", &claims_data);
+        context.insert("is_logged_in", &true);
+
+        // Check if the logged-in user is an admin
+        if claims_data.is_admin {
+            context.insert("is_admin", &true);
+            context.insert("banned_user_id", &query);
+        }
+
+        "ban_user.html" // Use the new template when logged in
+    } else {
+        // Handle the case where the user isn't logged in
+        error!("is_logged_in is FALSE now");
+        context.insert("is_logged_in", &false);
+        "index.html" // Use the original template when not logged in
+    };
+
+    let rendered = TEMPLATES
+        .render(template_name, &context)
+        .unwrap_or_else(|err| {
+            error!("Template rendering error: {}", err);
+            panic!()
+        });
+    Ok(Html(rendered))
+}

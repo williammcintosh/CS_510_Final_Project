@@ -46,28 +46,51 @@
     {% endfor %}
 </ul>
 
+<div class="danger_zone">
 <div class="horizontal-bar"></div>
 <div class="exclamation-marks">
     <h1>DANGER ZONE</h1>
-</div>
+
 <div class="users-table">
     <h2>All Users</h2>
     <table class="users-table">
         <tr>
+            <th>Ban Status</th>
             <th>User ID</th>
             <th>Email</th>
             <th>Is Admin</th>
             <th>Is Banned</th>
+            <th>Ban Hammer</th>
         </tr>
         {% for user in all_users %}
         <tr>
+            <td>
+                {% if not user.is_banned %}
+                    <p>not banned</p>
+                {% else %}
+                    <p>!!Banned!!</p>
+                {% endif %}
+            </td>
             <td>{{ user.id }}</td>
             <td>{{ user.email }}</td>
             <td>{{ user.is_admin }}</td>
             <td>{{ user.is_banned }}</td>
+            <td>
+                {% if user.id != claims.id %}
+                    {% if not user.is_banned %}
+                        <button onclick="window.location.href = '/ban_user/'">Ban User</button>
+                    {% else %}
+                        <button onclick="window.location.href = '/un_ban_user/{{ user.id }}'">Un-Ban User</button>
+                    {% endif %}
+                {% else %}
+                    <p>Me!</p>
+                {% endif %}
+            </td>
         </tr>
         {% endfor %}
     </table>
+</div>
+</div>
 </div>
 
 </body>

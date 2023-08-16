@@ -67,3 +67,16 @@ h1 {
 .users-table {
     margin-top: 20px;
 }
+
+.users-table th {
+    border: 1px solid #000000;
+    padding: 5px;
+}
+
+.danger_zone {
+    background-color: #fcc4c4;
+    border: 2px solid #000000;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 20px;
+}
