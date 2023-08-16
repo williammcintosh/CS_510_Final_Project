@@ -147,11 +147,14 @@ pub async fn set_favorite_url(
         // Perform the favoriting, update db
         let a_id = Some(ApodId(apod_id));
         let u_id = Some(UserId(claims_data.id));
-        let fav_apod = am_database.add_favorite(a_id, u_id).await?;
+        let _ = am_database.add_favorite(a_id, u_id).await?;
+        let fav_apod = am_database.get_apod_by_id(ApodId(apod_id)).await?;
 
         error!("Marked as favorite: {}", &apod_id);
 
         //Get apod title and set it to the context
+        context.insert("new_fav_title", &fav_apod.title);
+        context.insert("new_fav_url", &fav_apod.url);
 
         "favorite_set.html" // Use the new template when logged in
     } else {
