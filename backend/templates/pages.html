@@ -31,15 +31,19 @@
 
 <h1>Apods</h1>
 
-{% for package in page_packages %}
-<div class="package">
-    <h2>Apod: {{ package.apod.apod.title }}</h2>
-    <p>Image Date: {{ package.apod.apod.img_date }}</p>
-    <p>Content: {{ package.apod.apod.content }}</p>
-    <img src="{{ package.apod.apod.url }}" alt="Apod Image" class="img-half-size">
-
+{% for an_apod in all_apods %}
+<div class="an_apod">
+    <h2>Apod: {{ an_apod.apod.apod.title }}</h2>
+    <p>Image Date: {{ an_apod.apod.apod.img_date }}</p>
+    <p>Content: {{ an_apod.apod.apod.content }}</p>
+    <img src="{{ an_apod.apod.apod.url }}" alt="Apod Image" class="img-half-size">
+    {% for fav_apod in favorite_apods %}
+        {% if an_apod.apod.apod.img_date == fav_apod.img_date %}
+            <p> Favorited! </p>
+        {% endif %}
+    {% endfor %}
     <h3>Comments for apod:</h3>
-    {% for comment in package.apod.comments %}
+    {% for comment in an_apod.apod.comments %}
     <p>
         Comment Content: {{comment.content}}
     </p>

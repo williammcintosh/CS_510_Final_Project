@@ -35,7 +35,7 @@ use crate::template::TEMPLATES;
 
 #[allow(dead_code)]
 pub async fn root(
-    State(am_database): State<Store>,
+    State(mut am_database): State<Store>,
     OptionalClaims(claims): OptionalClaims,
 ) -> Result<Html<String>, AppError> {
     let mut context = Context::new();
@@ -47,12 +47,12 @@ pub async fn root(
         context.insert("is_logged_in", &true);
 
         // // Get the favorite APODs for the logged-in user
-        // let favorites = am_database.get_favorites_by_user_id(UserId(claims_data.id)).await?;
-        // context.insert("favorites", &favorites);
+        let favorites = am_database.get_favorites_by_user_id(UserId(claims_data.id)).await?;
+        context.insert("favorite_apods", &favorites);
 
         // Get all the page data
-        let page_packages = am_database.get_all_apod_pages().await?;
-        context.insert("page_packages", &page_packages);
+        let all_apods = am_database.get_all_apod_pages().await?;
+        context.insert("all_apods", &all_apods);
 
         "pages.html" // Use the new template when logged in
     } else {
