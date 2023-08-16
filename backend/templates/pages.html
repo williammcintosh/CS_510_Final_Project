@@ -36,7 +36,7 @@
     <h2>Apod: {{ package.apod.apod.title }}</h2>
     <p>Image Date: {{ package.apod.apod.img_date }}</p>
     <p>Content: {{ package.apod.apod.content }}</p>
-    <img src="{{ package.apod.apod.url }}" alt="Apod Image">
+    <img src="{{ package.apod.apod.url }}" alt="Apod Image" class="img-half-size">
 
     <h3>Comments for apod:</h3>
     {% for comment in package.apod.comments %}

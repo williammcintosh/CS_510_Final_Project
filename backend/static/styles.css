@@ -59,3 +59,34 @@ h1 {
 .header button {
     margin-right: 10px;
 }
+
+.exclamation-marks {
+    text-align: center;
+}
+
+.users-table {
+    margin-top: 20px;
+}
+
+.users-table th {
+    border: 1px solid #000000;
+    padding: 5px;
+}
+
+.danger_zone {
+    background-color: #fcc4c4;
+    border: 2px solid #000000;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+.img-half-size {
+    width: 50%;
+    height: 50%;
+}
+
+.img-quarter-size {
+    width: 15%;
+    height: 15%;
+}
