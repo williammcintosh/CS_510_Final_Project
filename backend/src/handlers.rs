@@ -183,6 +183,47 @@ pub async fn set_favorite_url(
     Ok(Html(rendered))
 }
 
+pub async fn un_favorite_url(
+    State(mut am_database): State<Store>,
+    Path(apod_id): Path<i32>, // localhost:3000/un_favorite/2
+    OptionalClaims(claims): OptionalClaims,
+) -> Result<Html<String>, AppError> {
+    let mut context = Context::new();
+    context.insert("name", "Casey");
+
+    let template_name = if let Some(claims_data) = claims {
+        context.insert("claims", &claims_data);
+        context.insert("is_logged_in", &true);
+
+        // Perform the favoriting, update db
+        let a_id = Some(ApodId(apod_id));
+        let u_id = Some(UserId(claims_data.id));
+        let _ = am_database.remove_favorite(a_id, u_id).await?;
+        let fav_apod = am_database.get_apod_by_id(ApodId(apod_id)).await?;
+
+        error!("Marked as favorite: {}", &apod_id);
+
+        //Get apod title and set it to the context
+        context.insert("new_fav_title", &fav_apod.title);
+        context.insert("new_fav_url", &fav_apod.url);
+
+        "un_favorite.html" // Use the new template when logged in
+    } else {
+        // Handle the case where the user isn't logged in
+        error!("is_logged_in is FALSE now");
+        context.insert("is_logged_in", &false);
+        "index.html" // Use the original template when not logged in
+    };
+
+    let rendered = TEMPLATES
+        .render(template_name, &context)
+        .unwrap_or_else(|err| {
+            error!("Template rendering error: {}", err);
+            panic!()
+        });
+    Ok(Html(rendered))
+}
+
 
 pub async fn update_apod(
     State(mut am_database): State<Store>,
