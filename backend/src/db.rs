@@ -176,6 +176,36 @@ SELECT * FROM apods
         Ok(new_favorite)
     }
 
+    pub async fn remove_favorite(
+        &mut self,
+        apod_id: Option<ApodId>,
+        user_id: Option<UserId>,
+    ) -> Result<Favorite, AppError> {
+
+        let a_id = i32::from(apod_id.unwrap_or(ApodId(0)));
+        let u_id = i32::from(user_id.unwrap_or(UserId(0)));
+
+        let res = sqlx::query(
+            r#"
+            DELETE FROM favorites
+            WHERE apod_id = $1 AND user_id = $2
+            RETURNING *
+        "#
+        )
+            .bind(a_id)
+            .bind(u_id)
+            .fetch_one(&self.conn_pool)
+            .await?;
+
+        let removed_favorite = Favorite {
+            id: Some(FavoriteId(res.get("id"))),
+            apod_id: Some(ApodId(res.get("apod_id"))),
+            user_id: Some(UserId(res.get("user_id"))),
+        };
+
+        Ok(removed_favorite)
+    }
+
     pub async fn update_apod(
         &mut self,
         new_apod: UpdateApod,

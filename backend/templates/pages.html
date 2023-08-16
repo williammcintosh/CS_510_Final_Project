@@ -40,9 +40,10 @@
 
     {% if apod_map[an_apod.apod.apod.id] %}
         <p> Favorited! </p>
+        <button onclick="window.location.href = '/un_favorite/{{ an_apod.apod.apod.id }}'">Remove Favorite</button>
     {% else %}
         <p> Not a favorite </p>
-        <button onclick="window.location.href = '/favorite/{{ an_apod.apod.apod.id }}'">Make Favorite</button>
+        <button onclick="window.location.href = '/favorite/{{ an_apod.apod.apod.id }}'">Add Favorite</button>
     {% endif %}
 
     <h3>Comments for apod:</h3>

@@ -35,6 +35,7 @@ pub async fn app(pool: PgPool) -> Router {
 
         .route("/comment", post(handlers::post_comment))
         .route("/favorite/:apod_id", get(handlers::set_favorite_url))
+        .route("/un_favorite/:apod_id", get(handlers::un_favorite_url))
         .route("/favorite/", post(handlers::post_favorite))
         // .route("/apods", get(handlers::get_all_apods))
         .route("/users", post(handlers::register))

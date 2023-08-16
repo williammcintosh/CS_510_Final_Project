@@ -42,8 +42,11 @@
 <h3>Your Favorite APODs:</h3>
 <ul>
     {% for favorite in favorites %}
-    <li>{{ favorite.title }}</li>
-    <img src="{{ favorite.url }}" alt="Fav Apod Image" class="img-quarter-size">
+    <li>
+        {{ favorite.title }}<br>
+        <img src="{{ favorite.url }}" alt="Fav Apod Image" class="img-quarter-size"><br>
+        <button onclick="window.location.href = '/un_favorite/{{ favorite.id }}'" style="margin-bottom: 20px;">Remove Favorite</button>
+    </li>
     {% endfor %}
 </ul>
 
