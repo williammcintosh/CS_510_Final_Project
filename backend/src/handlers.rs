@@ -31,6 +31,7 @@ use crate::models::favorite::{
     // FavoriteId,
 };
 use crate::template::TEMPLATES;
+use std::collections::HashMap;
 
 
 #[allow(dead_code)]
@@ -46,12 +47,21 @@ pub async fn root(
         context.insert("claims", &claims_data);
         context.insert("is_logged_in", &true);
 
-        // // Get the favorite APODs for the logged-in user
+        // Get the favorite APODs for the logged-in user
         let favorites = am_database.get_favorites_by_user_id(UserId(claims_data.id)).await?;
-        context.insert("favorite_apods", &favorites);
-
-        // Get all the page data
         let all_apods = am_database.get_all_apod_pages().await?;
+        context.insert("all_apods", &all_apods);
+
+        let mut apod_map: HashMap<i32, bool> = HashMap::new();
+
+        // Iterate through each apod and check if it is favorited
+        for apod in all_apods.iter() {
+            let is_favorited = favorites.iter().any(|favorite| favorite.id == apod.apod.apod.id);
+            apod_map.insert(apod.apod.apod.id.0, is_favorited);
+        }
+
+        // Insert the hashmap into the context
+        context.insert("apod_map", &apod_map);
         context.insert("all_apods", &all_apods);
 
         "pages.html" // Use the new template when logged in

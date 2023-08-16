@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Favorite APODs - Fav Removed</title>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body>
+
+{% if is_logged_in %}
+<!--show fav set page-->
+<h2> Image Removed From Favorites </h2>
+<p> You have successfully removed "{{ new_fav_title }}" from your favorites! </p>
+<img src="{{ new_fav_url }}" alt="Fav Apod Image" class="img-quarter-size">
+<div>
+    <button onclick="window.location.href = '/'">Back to All APODs</button>
+</div>
+
+{% else %}
+<!--show login form-->
+<h2>Login</h2>
+
+<form action="/login" method="post">
+    <label for="email">Email:</label>
+    <input type="text" id="email" name="email">
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password">
+    <input type="submit" value="Login">
+</form>
+
+{% endif %}
+
+</body>
+</html>
