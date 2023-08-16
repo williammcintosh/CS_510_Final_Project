@@ -35,7 +35,7 @@ use crate::template::TEMPLATES;
 
 #[allow(dead_code)]
 pub async fn root(
-    State(mut am_database): State<Store>,
+    State(am_database): State<Store>,
     OptionalClaims(claims): OptionalClaims,
 ) -> Result<Html<String>, AppError> {
     let mut context = Context::new();
@@ -46,9 +46,9 @@ pub async fn root(
         context.insert("claims", &claims_data);
         context.insert("is_logged_in", &true);
 
-        // Get the favorite APODs for the logged-in user
-        let favorites = am_database.get_favorites_by_user_id(UserId(claims_data.id)).await?;
-        context.insert("favorites", &favorites);
+        // // Get the favorite APODs for the logged-in user
+        // let favorites = am_database.get_favorites_by_user_id(UserId(claims_data.id)).await?;
+        // context.insert("favorites", &favorites);
 
         // Get all the page data
         let page_packages = am_database.get_all_apod_pages().await?;
@@ -278,6 +278,10 @@ pub async fn profile(
         // Check if the logged-in user is an admin
         if claims_data.is_admin {
             context.insert("is_admin", &true);
+
+            // Get the favorite APODs for the logged-in user
+            let all_users = am_database.get_all_users().await?;
+            context.insert("all_users", &all_users);
         }
 
         // Get the favorite APODs for the logged-in user

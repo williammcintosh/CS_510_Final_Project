@@ -59,3 +59,11 @@ h1 {
 .header button {
     margin-right: 10px;
 }
+
+.exclamation-marks {
+    text-align: center;
+}
+
+.users-table {
+    margin-top: 20px;
+}

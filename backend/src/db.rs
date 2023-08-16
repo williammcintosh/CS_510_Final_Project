@@ -322,6 +322,26 @@ SELECT title, img_date, content, url, id FROM apods WHERE id = $1
         Ok(res)
     }
 
+    pub async fn get_all_users(&self) -> Result<Vec<UserDetails>, AppError> {
+        let rows = sqlx::query("SELECT * FROM users")
+            .fetch_all(&self.conn_pool)
+            .await?;
+
+        let all_users: Vec<_> = rows
+            .into_iter()
+            .map(|row| {
+                UserDetails {
+                    id: row.get("id"),
+                    email: row.get("email"),
+                    is_admin: row.get("is_admin"),
+                    is_banned: row.get("is_banned"),
+                }
+            })
+            .collect();
+
+        Ok(all_users)
+    }
+
     pub async fn get_page_for_apod(
         &self,
         apod: GetApodById,
