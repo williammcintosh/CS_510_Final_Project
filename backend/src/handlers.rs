@@ -278,15 +278,19 @@ pub async fn profile(
         // Check if the logged-in user is an admin
         if claims_data.is_admin {
             context.insert("is_admin", &true);
+            error!("Setting is_admin is TRUE now");
 
             // Get the favorite APODs for the logged-in user
             let all_users = am_database.get_all_users().await?;
             context.insert("all_users", &all_users);
         }
+        error!("is_admin is FALSE");
 
         // Get the favorite APODs for the logged-in user
         let favorites = am_database.get_favorites_by_user_id(UserId(claims_data.id)).await?;
         context.insert("favorites", &favorites);
+
+        error!("Received user's favorite APODs");
 
         "profile.html" // Use the new template when logged in
     } else {
@@ -305,9 +309,10 @@ pub async fn profile(
     Ok(Html(rendered))
 }
 
+//
 pub async fn ban_user(
     State(mut am_database): State<Store>,
-    // Path(query): Path<i32>, // localhost:3000/ban_user/2
+    Path(query): Path<i32>, // localhost:3000/ban_user/2
     OptionalClaims(claims): OptionalClaims,
 ) -> Result<Html<String>, AppError> {
     let mut context = Context::new();

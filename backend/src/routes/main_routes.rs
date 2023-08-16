@@ -23,9 +23,8 @@ pub async fn app(pool: PgPool) -> Router {
         // The router matches these FROM TOP TO BOTTOM explicitly!
         .nest("/static", static_router)
         .route("/", get(root))
+        .route("/ban_user/:user_id", get(handlers::ban_user))
         .route("/profile", get(handlers::profile))
-        .route("/ban_user", get(handlers::ban_user))
-
 
         .route("/apods", get(handlers::get_apods))
         .route("/apod/:apod_id", get(handlers::get_apod_by_id))
