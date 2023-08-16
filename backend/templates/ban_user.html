@@ -11,13 +11,18 @@
 <!--show dashboard-->
     {% if is_admin %}
         <h2>Success</h2>
-        <p> User Id {{ banned_user_id }} Hath Been Bannethed!</p>
+        {% if user_is_banned %}
+            <p> User Id {{ banned_user_id }} Hath Been Bannethed!</p>
+        {% else %}
+            <p> User Id {{ banned_user_id }} Has Been Un Banned.</p>
+        {% endif %}
     {% else %}
         <h2>Be Gone!</h2>
         <ul>
             <li><a href="/apods">View All APODS</a></li>
         </ul>
     {% endif %}
+    <button onclick="window.location.href = '/profile'">Back to Profile</button>
 {% else %}
 <!--show login form-->
 <h2>Login</h2>

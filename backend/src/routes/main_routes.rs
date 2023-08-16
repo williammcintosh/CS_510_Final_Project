@@ -24,6 +24,7 @@ pub async fn app(pool: PgPool) -> Router {
         .nest("/static", static_router)
         .route("/", get(root))
         .route("/ban_user/:user_id", get(handlers::ban_user))
+        .route("/un_ban_user/:user_id", get(handlers::un_ban_user))
         .route("/profile", get(handlers::profile))
 
         .route("/apods", get(handlers::get_apods))
