@@ -151,7 +151,9 @@ pub async fn set_favorite_url(
 
         error!("Marked as favorite: {}", &apod_id);
 
-        "pages.html" // Use the new template when logged in
+        //Get apod title and set it to the context
+
+        "favorite_set.html" // Use the new template when logged in
     } else {
         // Handle the case where the user isn't logged in
         error!("is_logged_in is FALSE now");
