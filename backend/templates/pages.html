@@ -46,6 +46,7 @@
     {% endfor %}
     {% if not is_favorite %}
         <p> Not a favorite </p>
+        <button onclick="window.location.href = '/favorite/{{ an_apod.apod.apod.id }}'">Make Favorite</button>
     {% endif %}
     <h3>Comments for apod:</h3>
     {% for comment in an_apod.apod.comments %}
