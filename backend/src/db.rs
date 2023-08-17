@@ -65,13 +65,14 @@ impl Store {
     pub async fn get_all_apods(&mut self) -> Result<Vec<Apod>, AppError> {
         let rows = sqlx::query!(
             r#"
-SELECT * FROM apods
-"#
+        SELECT * FROM apods
+        ORDER BY id ASC
+    "#
         )
             .fetch_all(&self.conn_pool)
             .await?;
 
-        let apods: Vec<_> = rows
+        let mut apods: Vec<_> = rows
             .into_iter()
             .map(|row| {
                 Apod {
@@ -83,6 +84,8 @@ SELECT * FROM apods
                 }
             })
             .collect();
+
+        apods.reverse();
 
         Ok(apods)
     }
@@ -336,7 +339,10 @@ SELECT title, img_date, content, url, id FROM apods WHERE id = $1
     }
 
     pub async fn get_all_apod_pages(&self) -> Result<Vec<PagePackage>, AppError> {
-        let apods = sqlx::query("SELECT id from apods")
+        let apods = sqlx::query(r#"
+        SELECT * FROM apods
+        ORDER BY img_date DESC
+        "#)
             .fetch_all(&self.conn_pool)
             .await?;
 
