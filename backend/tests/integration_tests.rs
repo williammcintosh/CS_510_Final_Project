@@ -2,8 +2,8 @@ use http::{Request, StatusCode};
 use hyper::Body;
 use sqlx::PgPool;
 use tower::ServiceExt;
-use crate::models::user::{UserSignup, UserDetails};
-use backend::main_routes::app;
+use backend::models::{UserSignup, UserDetails, CreateComment};
+use backend::routes::main_routes::app;
 
 #[sqlx::test(fixtures("0001_new_users"))]
 async fn test_add_users(db_pool: PgPool) {
