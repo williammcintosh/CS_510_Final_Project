@@ -1,4 +1,4 @@
-DELETE FROM uesrs;
+DELETE FROM users;
 
 -- Reset primary key id to 1
 SELECT setval(pg_get_serial_sequence('users', 'id'), 1, false);
