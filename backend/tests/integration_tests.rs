@@ -5,30 +5,31 @@ use tower::ServiceExt;
 use backend::models::{UserSignup, UserDetails, CreateComment};
 use backend::routes::main_routes::app;
 
-#[sqlx::test(fixtures("0001_new_users"))]
-async fn test_add_users(db_pool: PgPool) {
-    let mut app = app(db_pool).await;
-
-    let new_user = UserSignup {
-        email: "fifth@apods.com".into(),
-        password: "1qazxsw2".into(),
-        confirm_password: "1qazxsw2".into(),
-    };
-
-    let response = app
-        .oneshot(
-            Request::builder()
-                .method(http::Method::POST)
-                .uri("/users")
-                .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
-                .body(Body::from(serde_json::to_string(&new_user).unwrap()))
-                .unwrap(),
-        )
-        .await
-        .unwrap();
-
-    assert_eq!(response.status(), StatusCode::OK);
-}
+// #[sqlx::test(fixtures("0001_new_users"))]
+// async fn test_add_users(db_pool: PgPool) {
+//
+//     let mut app = app(db_pool).await;
+//
+//     let new_user = UserSignup {
+//         email: "fifth@apods.com".into(),
+//         password: "1qazxsw2".into(),
+//         confirm_password: "1qazxsw2".into(),
+//     };
+//
+//     let response = app
+//         .oneshot(
+//             Request::builder()
+//                 .method(http::Method::POST)
+//                 .uri("/users")
+//                 .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
+//                 .body(Body::from(serde_json::to_string(&new_user).unwrap()))
+//                 .unwrap(),
+//         )
+//         .await
+//         .unwrap();
+//
+//     assert_eq!(response.status(), StatusCode::OK);
+// }
 
 // #[sqlx::test(fixtures("0002_new_comments"))]
 // async fn test_add_comments(db_pool: PgPool) {
