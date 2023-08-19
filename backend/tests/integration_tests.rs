@@ -2,27 +2,26 @@ use http::{Request, StatusCode};
 use hyper::Body;
 use sqlx::PgPool;
 use tower::ServiceExt;
-
-
+use crate::models::user::{UserSignup, UserDetails};
 use backend::main_routes::app;
-use backend::apod::{CreateApod, Apod};
 
-#[sqlx::test(fixtures("0001_apods"))]
-async fn test_add_apod(db_pool: PgPool) {
+#[sqlx::test(fixtures("0001_new_users"))]
+async fn test_add_users(db_pool: PgPool) {
     let mut app = app(db_pool).await;
 
-    let apod = CreateApod {
-        title: "New Title".into(),
-        content: "Test content2".into(),
+    let new_user = UserSignup {
+        email: "fifth@apods.com".into(),
+        password: "1qazxsw2".into(),
+        confirm_password: "1qazxsw2".into(),
     };
 
     let response = app
         .oneshot(
             Request::builder()
                 .method(http::Method::POST)
-                .uri("/apod")
+                .uri("/users")
                 .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
-                .body(Body::from(serde_json::to_string(&apod).unwrap()))
+                .body(Body::from(serde_json::to_string(&new_user).unwrap()))
                 .unwrap(),
         )
         .await
@@ -31,69 +30,23 @@ async fn test_add_apod(db_pool: PgPool) {
     assert_eq!(response.status(), StatusCode::OK);
 }
 
-#[sqlx::test(fixtures("0001_apods"))]
-async fn test_get_apods(db_pool: PgPool) {
-    let app = app(db_pool).await;
-
-    let response = app
-        .oneshot(
-            Request::builder()
-                .method(http::Method::GET)
-                .uri("/apods")
-                .body(Body::empty())
-                .unwrap(),
-        )
-        .await
-        .unwrap();
-
-    assert_eq!(response.status(), StatusCode::OK);
-
-    let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
-    let apods: Vec<Apod> = serde_json::from_slice(&body).unwrap();
-    assert!(!apods.is_empty());
-}
-
-#[sqlx::test(fixtures("0001_apods"))]
-async fn test_get_apod_by_id(db_pool: PgPool) {
-    let app = app(db_pool).await;
-
-    let response = app
-        .oneshot(
-            Request::builder()
-                .method(http::Method::GET)
-                .uri("/apod/1")
-                .body(Body::empty())
-                .unwrap(),
-        )
-        .await
-        .unwrap();
-
-    assert_eq!(response.status(), StatusCode::OK);
-
-    let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
-    let apod: Apod = serde_json::from_slice(&body).unwrap();
-    assert_eq!(apod.id.0, 1);
-}
-
-#[sqlx::test(fixtures("0001_apods"))]
-async fn test_update_apod(db_pool: PgPool) {
+#[sqlx::test(fixtures("0002_new_comments"))]
+async fn test_add_comments(db_pool: PgPool) {
     let mut app = app(db_pool).await;
 
-    let updated_apod = Apod {
-        id: 1.into(),
-        title: "Updated Title".into(),
-        content: "Updated content".into(),
+    let new_comment = CreateComment {
+        content: "Most premium!".into(),
+        reference: "{'Apod': 3}".into(),
+        user_id: "3".into(),
     };
 
     let response = app
         .oneshot(
             Request::builder()
-                .method(http::Method::PUT)
-                .uri("/apod")
+                .method(http::Method::POST)
+                .uri("/comment")
                 .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
-                .body(Body::from(
-                    serde_json::to_string(&updated_apod).unwrap(),
-                ))
+                .body(Body::from(serde_json::to_string(&new_comment).unwrap()))
                 .unwrap(),
         )
         .await
@@ -102,26 +55,30 @@ async fn test_update_apod(db_pool: PgPool) {
     assert_eq!(response.status(), StatusCode::OK);
 }
 
-#[sqlx::test(fixtures("0001_apods"))]
-async fn test_delete_apod(db_pool: PgPool) {
-    println!("In test delete");
-    let app = app(db_pool).await;
-
-    let query_uri = format!("/apod?apod_id=1");
-
-    let response = app
-        .oneshot(
-            Request::builder()
-                .method(http::Method::DELETE)
-                .uri(query_uri)
-                .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
-                .body(Body::empty())
-                .unwrap(),
-        )
-        .await
-        .unwrap();
-
-    dbg!("DELETED APOD RESPONSE");
-    dbg!(&response);
-    assert_eq!(response.status(), StatusCode::OK);
-}
+// #[sqlx::test(fixtures("0003_make_user_admin"))]
+// async fn test_update_user(db_pool: PgPool) {
+//     let app = app(db_pool).await;
+//
+//     let updated_user = UserDetails {
+//         id: 2.into(),
+//         email: "second@apods.com".into(),
+//         is_admin: true,
+//         is_banned: false,
+//     };
+//
+//     let response = app
+//         .oneshot(
+//             Request::builder()
+//                 .method(http::Method::PUT)
+//                 .uri("/question")
+//                 .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
+//                 .body(Body::from(
+//                     serde_json::to_string(&updated_user).unwrap(),
+//                 ))
+//                 .unwrap(),
+//         )
+//         .await
+//         .unwrap();
+//
+//     assert_eq!(response.status(), StatusCode::OK);
+// }

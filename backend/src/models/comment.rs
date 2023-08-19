@@ -14,6 +14,13 @@ pub struct Comment {
     pub user_id: Option<UserId>,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, sqlx::FromRow)]
+pub struct CreateComment {
+    pub content: String,
+    pub reference: CommentReference,
+    pub user_id: Option<UserId>,
+}
+
 make_db_id!(CommentId);
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
