@@ -1,0 +1,14 @@
+draft: false
+acme:
+  email_account: william.michael.mcintosh@gmail.com
+  staging: true # set to TRUE while testing or you will be banned for a week!
+profiles:
+  - name: hetzner
+    provider: hetzner
+    provider_options:
+      auth_token: ${{ HETZNER_DNS_AUTH_TOKEN }} # gives dnsrobocert the ability to log in as us
+certificates:
+  - domains:
+      - "*.thegradientascent.com"
+      - thegradientascent.com
+    profile: hetzner
