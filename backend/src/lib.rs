@@ -27,9 +27,9 @@ pub mod db;
 pub mod error;
 pub mod handlers;
 pub mod layers;
-mod models;
-mod routes;
-mod template;
+pub mod models;
+pub mod routes;
+pub mod template;
 
 pub async fn run_backend() {
     dotenv().ok();
